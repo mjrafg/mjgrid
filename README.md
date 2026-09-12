@@ -3,8 +3,18 @@
 Declarative CRUD grid for React. **One column definition drives everything**: the data grid, the filter bar, the create/edit dialog, inline editing, Excel import/export and print.
 
 ```
-npm install @bluebiz/mjgrid
+npm install @bluebiz/mjgrid     # npm projects
+yarn add @bluebiz/mjgrid        # yarn projects
 ```
+
+Use the package manager the host project already uses. Running `npm install`
+inside a yarn project (or vice versa) makes that tool reconcile the whole
+`node_modules` tree against its own rules and it will remove packages the
+other lockfile put there. Before publishing, install from a tarball:
+`npm pack` then `yarn add file:./bluebiz-mjgrid-0.1.0.tgz`.
+
+Peer dependencies: `react >=18`, `react-dom >=18`; the MUI adapter also
+needs `@mui/material >=5.12` with `@emotion/react` and `@emotion/styled`.
 
 Headless core + a MUI adapter. The core (`@bluebiz/mjgrid/core`) has no UI dependency and can back any component library.
 

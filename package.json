@@ -9,11 +9,27 @@
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "require": "./dist/index.cjs" },
-    "./core": { "types": "./dist/core/index.d.ts", "import": "./dist/core/index.js", "require": "./dist/core/index.cjs" },
-    "./mui": { "types": "./dist/mui/index.d.ts", "import": "./dist/mui/index.js", "require": "./dist/mui/index.cjs" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js",
+      "require": "./dist/core/index.cjs"
+    },
+    "./mui": {
+      "types": "./dist/mui/index.d.ts",
+      "import": "./dist/mui/index.js",
+      "require": "./dist/mui/index.cjs"
+    },
+    "./package.json": "./package.json"
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -31,9 +47,15 @@
     "react-dom": ">=18"
   },
   "peerDependenciesMeta": {
-    "@mui/material": { "optional": true },
-    "@emotion/react": { "optional": true },
-    "@emotion/styled": { "optional": true }
+    "@mui/material": {
+      "optional": true
+    },
+    "@emotion/react": {
+      "optional": true
+    },
+    "@emotion/styled": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@tanstack/react-query": "^5.59.0",
