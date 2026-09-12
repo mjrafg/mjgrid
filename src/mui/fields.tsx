@@ -1,5 +1,5 @@
 import { FormControl, FormControlLabel, FormLabel, MenuItem, Radio, RadioGroup, TextField } from '@mui/material'
-import { useMjOptions } from '../core'
+import { useMj, useMjOptions } from '../core'
 import type { FieldProps, TypeRenderers } from './registry'
 import type { MjColumnType } from '../core'
 
@@ -59,12 +59,13 @@ export function DateField({ column, value, onChange, error, disabled }: FieldPro
 
 export function BooleanField({ column, value, onChange, error, disabled }: FieldProps<'boolean'>) {
   const p = column.params
+  const { labels } = useMj()
   return (
     <FormControl error={Boolean(error)} disabled={disabled}>
       <FormLabel sx={{ fontSize: 13 }}>{label(column)}{column.rules?.some(r => r.required) ? ' *' : ''}</FormLabel>
       <RadioGroup row value={value === true ? 'true' : value === false ? 'false' : ''} onChange={e => onChange(e.target.value === 'true')}>
-        <FormControlLabel value="true" control={<Radio size="small" />} label={p?.positiveText ?? '사용'} />
-        <FormControlLabel value="false" control={<Radio size="small" />} label={p?.negativeText ?? '미사용'} />
+        <FormControlLabel value="true" control={<Radio size="small" />} label={p?.positiveText ?? labels.positive} />
+        <FormControlLabel value="false" control={<Radio size="small" />} label={p?.negativeText ?? labels.negative} />
       </RadioGroup>
     </FormControl>
   )

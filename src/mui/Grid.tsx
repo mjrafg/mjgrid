@@ -25,7 +25,7 @@ const sortKey = (c: MjColumn) => c.sortField ?? (c.path ? `${c.field}.${c.path}`
 ensureDefaults()
 
 export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
-  const { toast } = useMj()
+  const { toast, labels: L } = useMj()
   const q = useMjQuery(config)
   const edit = useMjRows(config.columns)
   const { saveBatch, deleteOne } = useMjSave(config)
@@ -88,15 +88,15 @@ export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
       if (config.hooks?.validate && !(await config.hooks.validate(edit.dirtyRows))) return
       const r = await saveBatch(edit.rows)
       const n = r.inserted.length + r.updated.length + r.deleted.length
-      if (n === 0) { toast.error('변경된 내용이 없습니다.'); return }
-      toast.success('저장 되었습니다.')
+      if (n === 0) { toast.error(L.noChanges); return }
+      toast.success(L.saved)
       edit.clearErrors()
     } catch (e) {
-      if (e instanceof MjValidationError) { edit.setErrors(e.errors); toast.error(e.errors.map(x => `NO${x.rowIndex + 1}: ${x.message}`).join('\n')) }
+      if (e instanceof MjValidationError) { edit.setErrors(e.errors); toast.error(e.errors.map(x => `${L.errorPrefix(x.rowIndex + 1)}${x.message}`).join('\n')) }
       else if (e instanceof MjApiError) toast.error(e.message)
       else throw e
     }
-  }, [config.hooks, edit, saveBatch, toast])
+  }, [config.hooks, edit, saveBatch, toast, L])
 
   const onDelete = useCallback(async () => {
     if (!selected) return
@@ -105,15 +105,15 @@ export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
     if (row.__state === 'insert') { edit.removeRow(row.id); setSelected(null); return }
     const veto = await config.hooks?.onDeleteValidate?.(row)
     if (veto) { toast.error(veto); return }
-    try { await deleteOne(row.id); toast.success('삭제 되었습니다.'); setSelected(null) }
+    try { await deleteOne(row.id); toast.success(L.deleted); setSelected(null) }
     catch (e) { if (e instanceof MjApiError) toast.error(e.message); else throw e }
-  }, [selected, edit, config.hooks, deleteOne, toast])
+  }, [selected, edit, config.hooks, deleteOne, toast, L])
 
   const onExcelExport = async (example = false) => {
     const blob = await q.exportExcel(example)
     downloadBlob(blob, `${config.name}${example ? '_양식' : ''}_${dayjs().format('YYYYMMDDHHmmss')}.xlsx`)
   }
-  const onPrint = async () => openPrintWindow(buildPrintHtml(config, await q.fetchAll()))
+  const onPrint = async () => openPrintWindow(buildPrintHtml(config, await q.fetchAll(), L))
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }} data-testid="mj-grid">
@@ -151,7 +151,7 @@ export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
               </TableRow>
             ))}
             {rows.length === 0 && !q.isLoading && (
-              <TableRow><TableCell colSpan={visibleColumns.length} align="center" sx={{ py: 6, color: 'text.secondary' }}>데이터가 없습니다.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={visibleColumns.length} align="center" sx={{ py: 6, color: 'text.secondary' }}>{L.noData}</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
@@ -159,7 +159,7 @@ export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
       <MjPagination page={q.page} pageCount={q.pageCount} total={q.total} pageSize={q.pageSize} onPageChange={q.setPage} />
 
       <Dialog open={dialog !== null} onClose={() => { setDialog(null); config.hooks?.onDialogClose?.() }} fullWidth maxWidth={config.dialogSize ?? 'sm'}>
-        <DialogTitle align="center">{config.name} {dialog?.mode === 'insert' ? '등록' : dialog?.mode === 'view' ? '조회' : '수정'}</DialogTitle>
+        <DialogTitle align="center">{config.name} {dialog?.mode === 'insert' ? L.register : dialog?.mode === 'view' ? L.view : L.edit}</DialogTitle>
         <DialogContent>
           {dialog && <MjForm config={config} mode={dialog.mode} row={dialog.row} onClose={changed => { setDialog(null); config.hooks?.onDialogClose?.(); if (changed) void q.refresh() }} />}
         </DialogContent>

@@ -1,6 +1,6 @@
 import { Box, Button, Typography, useTheme } from '@mui/material'
 import { useState } from 'react'
-import type { ColumnOf, MjRow } from '../core'
+import { useMj, type ColumnOf, type MjRow } from '../core'
 import type { CellProps } from './registry'
 import type { ComponentType } from 'react'
 import type { MjColumnType } from '../core'
@@ -8,6 +8,7 @@ import { displayValue } from './value'
 
 /** Default read-only cell for every text-like type. */
 function TextCell({ column, value, row }: CellProps) {
+  if (column.renderCell) return <>{column.renderCell({ value, row, column }) as React.ReactNode}</>
   return <>{displayValue(column, value, row)}</>
 }
 
@@ -17,6 +18,7 @@ function NumberCell({ column, value, row }: CellProps) {
 
 function BooleanCell({ column, value, row }: CellProps<'boolean'>) {
   const theme = useTheme()
+  const { labels } = useMj()
   const p = column.params
   const positive = Boolean(value)
   const red = p?.colorPositive ? positive : !positive
@@ -26,7 +28,7 @@ function BooleanCell({ column, value, row }: CellProps<'boolean'>) {
       style={{ color: red ? theme.palette.error.main : undefined, cursor: clickable ? 'pointer' : undefined }}
       onClick={clickable ? () => p!.onClick!(positive, row) : undefined}
     >
-      {displayValue(column, value, row)}
+      {displayValue(column, value, row, labels)}
     </span>
   )
 }

@@ -113,6 +113,11 @@ export interface MjDateRange {
   width?: number
 }
 
+export interface MjWeekDaysParams extends MjEditableParams {
+  /** labels Sunday-first; defaults to Korean day names */
+  dayLabels?: [string, string, string, string, string, string, string]
+}
+
 export interface MjTimeParams extends MjEditableParams {
   /** minutes */
   step?: number
@@ -189,8 +194,8 @@ export interface MjAddressParams extends MjEditableParams {
 }
 
 export interface MjCustomParams {
-  /** rendered inside the form; the adapter decides the wrapper */
-  node: unknown
+  /** rendered inside the form; a node, or a function of the current form values */
+  node: unknown | ((ctx: { value: unknown; onChange: (v: unknown) => void; getValues: () => Record<string, unknown>; setValue: (f: string, v: unknown) => void }) => unknown)
 }
 
 // ---------------------------------------------------------------------------
@@ -235,6 +240,8 @@ export interface MjColumnBase {
   filterDefaultValue?: unknown
   onFilterChange?: (value: unknown) => void
   hideNativeFilter?: boolean
+  /** override the read-only cell */
+  renderCell?: (ctx: { value: unknown; row: Record<string, unknown>; column: MjColumn }) => unknown
 }
 
 type Col<T extends string, P> = MjColumnBase & { type: T; params?: P }
@@ -246,7 +253,7 @@ export type MjColumn =
   | Col<'date', MjDateParams>
   | Col<'time', MjTimeParams>
   | Col<'timeRange', MjTimeParams>
-  | Col<'weekDays', MjEditableParams>
+  | Col<'weekDays', MjWeekDaysParams>
   | Col<'boolean', MjBooleanParams>
   | Col<'image', MjImageParams>
   | Col<'file', MjFileParams>
@@ -338,6 +345,12 @@ export interface MjGridConfig {
   addButtonIcon?: string
   dialogSize?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
   rowHeight?: number
+  /** inline mode: show + / - per row (legacy hasRowAction) */
+  rowActions?: boolean
+  /** inline mode: write the visible order into this field on save (legacy hasSequence) */
+  sequenceField?: string
+  /** inline mode: keep at least one editable row */
+  keepOneRow?: boolean
   printColor?: string | ((row: Record<string, unknown>) => string)
   hooks?: MjGridHooks
 }
@@ -354,6 +367,9 @@ export interface MjGridHooks {
   onFilterChange?: (filters: MjFilter[]) => void
   afterFetch?: (rows: Record<string, unknown>[], total: number) => Promise<{ rows: Record<string, unknown>[]; total: number }>
   validate?: (unsaved: Record<string, unknown>[]) => Promise<boolean>
+  /** inline mode: replace the REST batch save entirely */
+  onSave?: (dirty: Record<string, unknown>[], all: Record<string, unknown>[]) => Promise<void>
+  afterSave?: (rows: Record<string, unknown>[]) => void
   onAddClick?: () => void
   onRowClick?: (row: Record<string, unknown>) => void
   onDialogClose?: () => void

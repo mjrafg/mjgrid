@@ -1,6 +1,6 @@
 import { Box, IconButton, MenuItem, TextField } from '@mui/material'
 import { useState } from 'react'
-import { filterFor, useMjOptions, type MjColumn, type MjFilter, type MjGridConfig } from '../core'
+import { filterFor, useMj, useMjOptions, type MjColumn, type MjFilter, type MjGridConfig } from '../core'
 
 export interface MjFilterBarProps {
   config: MjGridConfig
@@ -9,9 +9,10 @@ export interface MjFilterBarProps {
 
 function SelectFilter({ column, value, onChange }: { column: Extract<MjColumn, { type: 'select' }>; value: string; onChange: (v: string) => void }) {
   const { options } = useMjOptions(column.params)
+  const { labels } = useMj()
   return (
     <TextField select size="small" label={column.headerName} value={value} sx={{ minWidth: 160 }} onChange={e => onChange(e.target.value)}>
-      {!column.params?.hideAllOption && <MenuItem value=""><em>전체</em></MenuItem>}
+      {!column.params?.hideAllOption && <MenuItem value=""><em>{labels.all}</em></MenuItem>}
       {options.map(o => <MenuItem key={String(o.value)} value={String(o.value)}>{o.text}</MenuItem>)}
     </TextField>
   )
@@ -24,6 +25,7 @@ function SelectFilter({ column, value, onChange }: { column: Extract<MjColumn, {
  * Nothing fires on mount (the legacy bar issued an extra request via an effect on first render).
  */
 export function MjFilterBar({ config, onSearch }: MjFilterBarProps) {
+  const { labels } = useMj()
   const columns = [...(config.extraFilterBarColumns ?? []).map(c => ({ ...c, showOnFilterBar: true })), ...config.columns]
     .filter(c => c.showOnFilterBar)
     .sort((a, b) => (a.filterBarIndex ?? 1) - (b.filterBarIndex ?? 1))
@@ -58,9 +60,9 @@ export function MjFilterBar({ config, onSearch }: MjFilterBarProps) {
           case 'boolean':
             return (
               <TextField key={c.field} select size="small" label={c.headerName} value={String(v ?? '')} sx={{ minWidth: 140 }} onChange={e => set(c, e.target.value, true)}>
-                <MenuItem value=""><em>전체</em></MenuItem>
-                <MenuItem value="true">{c.params?.positiveText ?? '사용'}</MenuItem>
-                <MenuItem value="false">{c.params?.negativeText ?? '미사용'}</MenuItem>
+                <MenuItem value=""><em>{labels.all}</em></MenuItem>
+                <MenuItem value="true">{c.params?.positiveText ?? labels.positive}</MenuItem>
+                <MenuItem value="false">{c.params?.negativeText ?? labels.negative}</MenuItem>
               </TextField>
             )
           case 'date': {
@@ -85,7 +87,7 @@ export function MjFilterBar({ config, onSearch }: MjFilterBarProps) {
             )
         }
       })}
-      <IconButton color="primary" aria-label="검색" onClick={() => apply(values)}>🔍</IconButton>
+      <IconButton color="primary" aria-label={labels.search} onClick={() => apply(values)}>🔍</IconButton>
     </Box>
   )
 }

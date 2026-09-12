@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import type { MjApiClient } from '../protocol'
 import { koMessages, type MjMessages } from '../messages'
+import { koLabels, type MjLabels } from '../labels'
 
 /** Host-supplied notifications. Keeps react-hot-toast (or any other) out of the core. */
 export interface MjToast {
@@ -9,10 +10,27 @@ export interface MjToast {
   error: (message: string) => void
 }
 
+/** Where files go. Defaults match the HACCP backend; override per project. */
+export interface MjFileEndpoints {
+  uploadUrl: string
+  /** build a download URL for a stored file */
+  downloadUrl: (file: { type?: string; savedName?: string }) => string
+  /** absolute/relative URL for an image thumbnail path returned by the server */
+  imageUrl: (path: string) => string
+}
+
+export const defaultFileEndpoints: MjFileEndpoints = {
+  uploadUrl: '/api/file/upload',
+  downloadUrl: f => `/api/file/download?type=${encodeURIComponent(f.type ?? 'FILE')}&fileName=${encodeURIComponent(f.savedName ?? '')}`,
+  imageUrl: p => p
+}
+
 export interface MjContextValue {
   api: MjApiClient
   messages: MjMessages
+  labels: MjLabels
   toast: MjToast
+  files: MjFileEndpoints
 }
 
 const MjContext = createContext<MjContextValue | null>(null)
@@ -22,15 +40,17 @@ const silentToast: MjToast = { success: () => {}, error: m => console.error(m) }
 export interface MjProviderProps {
   api: MjApiClient
   messages?: MjMessages
+  labels?: Partial<MjLabels>
+  files?: Partial<MjFileEndpoints>
   toast?: MjToast
   /** pass your app's QueryClient to share cache; one is created otherwise */
   queryClient?: QueryClient
   children: ReactNode
 }
 
-export function MjProvider({ api, messages, toast, queryClient, children }: MjProviderProps) {
+export function MjProvider({ api, messages, labels, files, toast, queryClient, children }: MjProviderProps) {
   const client = useMemo(() => queryClient ?? new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } }), [queryClient])
-  const value = useMemo<MjContextValue>(() => ({ api, messages: messages ?? koMessages, toast: toast ?? silentToast }), [api, messages, toast])
+  const value = useMemo<MjContextValue>(() => ({ api, messages: messages ?? koMessages, labels: { ...koLabels, ...labels }, files: { ...defaultFileEndpoints, ...files }, toast: toast ?? silentToast }), [api, messages, labels, files, toast])
   return (
     <QueryClientProvider client={client}>
       <MjContext.Provider value={value}>{children}</MjContext.Provider>

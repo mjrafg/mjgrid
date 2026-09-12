@@ -33,7 +33,7 @@ const spanOf = (c: MjColumn, config: MjGridConfig) => c.span ?? (config.dialogSi
 ensureDefaults()
 
 export function MjForm({ config, mode, row, onClose }: MjFormProps) {
-  const { api, toast } = useMj()
+  const { api, toast, labels: L } = useMj()
   const { saveOne, deleteOne, isSaving } = useMjSave(config)
   const columns = formColumns(config, mode)
   const passwordFields = columns.filter(c => c.type === 'string' && c.params?.inputType === 'password').map(c => c.field)
@@ -68,7 +68,7 @@ export function MjForm({ config, mode, row, onClose }: MjFormProps) {
     if (config.hooks?.onSubmit) { config.hooks.onSubmit((row ?? {}) as Record<string, unknown>, payload); onClose(true); return }
     try {
       await saveOne({ row: payload, mode: mode === 'insert' ? 'insert' : 'update' })
-      toast.success(mode === 'insert' ? '등록 되었습니다.' : '수정 되었습니다.')
+      toast.success(mode === 'insert' ? L.inserted : L.updated)
       onClose(true)
     } catch (e) {
       if (e instanceof MjApiError) toast.error(e.message)
@@ -81,7 +81,7 @@ export function MjForm({ config, mode, row, onClose }: MjFormProps) {
     setConfirmDelete(false)
     try {
       await deleteOne(String(row?.id))
-      toast.success('삭제 되었습니다.')
+      toast.success(L.deleted)
       onClose(true)
     } catch (e) {
       if (e instanceof MjApiError) toast.error(e.message); else throw e
@@ -104,17 +104,17 @@ export function MjForm({ config, mode, row, onClose }: MjFormProps) {
           )
         })}
         <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-          <Button variant="contained" color="error" onClick={() => onClose(false)}>취소</Button>
-          {mode === 'update' && (config.deletable ?? true) && <Button variant="outlined" color="error" onClick={() => setConfirmDelete(true)} disabled={isSaving}>삭제</Button>}
-          {mode !== 'view' && <Button type="submit" variant="contained" disabled={isSaving}>{mode === 'insert' ? config.addButtonText ?? '등록' : '수정'}</Button>}
+          <Button variant="contained" color="error" onClick={() => onClose(false)}>{L.cancel}</Button>
+          {mode === 'update' && (config.deletable ?? true) && <Button variant="outlined" color="error" onClick={() => setConfirmDelete(true)} disabled={isSaving}>{L.delete}</Button>}
+          {mode !== 'view' && <Button type="submit" variant="contained" disabled={isSaving}>{mode === 'insert' ? config.addButtonText ?? L.register : L.update}</Button>}
         </Grid>
       </Grid>
       <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
-        <DialogTitle>삭제</DialogTitle>
-        <DialogContent>삭제하시겠습니까?</DialogContent>
+        <DialogTitle>{L.confirmDeleteTitle}</DialogTitle>
+        <DialogContent>{L.confirmDeleteBody}</DialogContent>
         <DialogActions>
-          <Button onClick={() => setConfirmDelete(false)}>취소</Button>
-          <Button color="error" variant="contained" onClick={doDelete}>확인</Button>
+          <Button onClick={() => setConfirmDelete(false)}>{L.cancel}</Button>
+          <Button color="error" variant="contained" onClick={doDelete}>{L.confirm}</Button>
         </DialogActions>
       </Dialog>
     </form>

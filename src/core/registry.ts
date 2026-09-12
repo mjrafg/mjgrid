@@ -38,16 +38,17 @@ export const columnTypeRegistry: Record<MjColumnType, MjTypeCapabilities> = {
   select: { filterOperator: 'equals', searchable: true, width: 130, align: 'left', formCapable: true, inlineCapable: true },
   date: { filterOperator: 'between', searchable: false, width: 130, align: 'center', formCapable: true, inlineCapable: true,
     encode: v => (v ? dayjs(v as string | Date).format('YYYY-MM-DD') : null) },
-  time: { filterOperator: null, searchable: false, width: 100, align: 'center', formCapable: true, inlineCapable: false,
-    encode: v => (v ? dayjs(v as Date).format('HH:mm:ss') : null) },
+  time: { filterOperator: null, searchable: false, width: 100, align: 'center', formCapable: true, inlineCapable: true,
+    // stored as HH:mm:ss; UI may hand back 'HH:mm' strings or Dates
+    encode: v => (v ? (typeof v === 'string' ? (v.length === 5 ? `${v}:00` : v) : dayjs(v as Date).format('HH:mm:ss')) : null) },
   timeRange: { filterOperator: null, searchable: false, width: 140, align: 'center', formCapable: true, inlineCapable: false,
     // stored as "HH:mm HH:mm"
-    encode: v => { const r = v as { start?: Date | null; end?: Date | null } | null; return r ? `${r.start ? dayjs(r.start).format('HH:mm') : ''} ${r.end ? dayjs(r.end).format('HH:mm') : ''}` : null },
-    decode: s => { const [a = '', b = ''] = String(s ?? '').split(' '); return { start: a ? dayjs(`1970-01-01T${a}`).toDate() : null, end: b ? dayjs(`1970-01-01T${b}`).toDate() : null } } },
+    encode: v => { if (v === null || v === undefined) return null; if (typeof v === 'string') return v; const r = v as { start?: Date | string | null; end?: Date | string | null }; const f = (x: Date | string | null | undefined) => (x ? (typeof x === 'string' ? x.slice(0, 5) : dayjs(x).format('HH:mm')) : ''); return `${f(r.start)} ${f(r.end)}` },
+    decode: s => { const [a = '', b = ''] = String(s ?? '').split(' '); return { start: a || null, end: b || null } } },
   weekDays: { filterOperator: null, searchable: false, width: 180, align: 'left', formCapable: true, inlineCapable: false,
     // stored as "1,0,1,0,1,0,0" Sunday-first
-    encode: v => (Array.isArray(v) ? v.map(b => (b ? '1' : '0')).join(',') : null),
-    decode: s => String(s ?? '').split(',').map(x => x === '1') },
+    encode: v => (Array.isArray(v) ? v.map(b => (b ? '1' : '0')).join(',') : typeof v === 'string' ? v : null),
+    decode: s => (Array.isArray(s) ? (s as boolean[]) : String(s ?? '').split(',').map(x => x === '1')) },
   boolean: { filterOperator: 'is', searchable: false, width: 90, align: 'center', formCapable: true, inlineCapable: true },
   image: { filterOperator: null, searchable: false, width: 120, align: 'center', formCapable: true, inlineCapable: false },
   file: { filterOperator: null, searchable: false, width: 160, align: 'center', formCapable: true, inlineCapable: false },

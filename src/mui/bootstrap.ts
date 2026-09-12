@@ -1,6 +1,7 @@
 import { defaultCells } from './cells'
 import { defaultEditors } from './editors'
 import { defaultFields } from './fields'
+import { extraFields } from './fields2'
 import { registerMany, registerType } from './registry'
 import { selectGridRenderers } from './selectGrid'
 
@@ -16,5 +17,6 @@ export function ensureDefaults(): void {
   registerMany(Object.fromEntries(Object.entries(defaultCells).map(([t, C]) => [t, { Cell: C }])))
   registerMany(defaultEditors)
   registerMany(defaultFields)
+  registerMany(extraFields)
   registerType('selectGrid', selectGridRenderers)
 }

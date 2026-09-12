@@ -1,16 +1,16 @@
 import dayjs from 'dayjs'
-import type { MjGridConfig, MjRow } from '../core'
+import type { MjGridConfig, MjLabels, MjRow } from '../core'
 import { displayValue, escapeHtml, readCell } from './value'
 
 /** Builds the print document. Every cell value is escaped - the legacy printer injected raw values into document.write. */
-export function buildPrintHtml(config: MjGridConfig, rows: MjRow[]): string {
+export function buildPrintHtml(config: MjGridConfig, rows: MjRow[], labels?: Pick<MjLabels, 'positive' | 'negative'>): string {
   const cols = config.columns.filter(c => !c.hideOnPrint && !c.formOnly && c.type !== 'button')
   const head = cols.map(c => `<th>${escapeHtml(c.headerName)}</th>`).join('')
   const body = rows.map((row, i) => {
     const rc = typeof config.printColor === 'function' ? config.printColor(row) : config.printColor
     const tds = cols.map(c => {
       const raw = readCell(c, row)
-      const text = c.printFormat ? c.printFormat(raw, row) : displayValue(c, raw, row)
+      const text = c.printFormat ? c.printFormat(raw, row) : displayValue(c, raw, row, labels)
       const cc = typeof c.printColor === 'function' ? c.printColor(raw, row) : c.printColor
       const align = c.type === 'number' ? 'right' : 'left'
       return `<td style="text-align:${align}${cc ? `;color:${escapeHtml(cc)}` : ''}">${escapeHtml(text)}</td>`

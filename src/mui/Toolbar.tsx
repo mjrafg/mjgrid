@@ -1,6 +1,6 @@
 import { Box, Button, IconButton, InputAdornment, TextField } from '@mui/material'
 import { useState, type ReactNode } from 'react'
-import type { MjGridConfig } from '../core'
+import { useMj, type MjGridConfig } from '../core'
 
 export interface MjToolbarProps {
   config: MjGridConfig
@@ -29,6 +29,7 @@ function useBusy() {
 
 export function MjToolbar(p: MjToolbarProps) {
   const { config } = p
+  const { labels: L } = useMj()
   const [term, setTerm] = useState(p.search)
   const { busy, run } = useBusy()
   const inline = config.editMode === 'inline'
@@ -38,11 +39,11 @@ export function MjToolbar(p: MjToolbarProps) {
     <Box sx={{ display: config.hideToolbar ? 'none' : 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center', justifyContent: 'space-between', p: 2 }}>
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
         {config.showToolbarSearch && (
-          <TextField size="small" value={term} placeholder="검색어 입력.." onChange={e => setTerm(e.target.value)}
+          <TextField size="small" value={term} placeholder={L.searchPlaceholder} onChange={e => setTerm(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') p.onSearch(term) }}
             InputProps={{
-              startAdornment: <InputAdornment position="start"><IconButton size="small" aria-label="초기화" onClick={() => { setTerm(''); p.onSearch('') }}>✕</IconButton></InputAdornment>,
-              endAdornment: <InputAdornment position="end"><IconButton size="small" aria-label="검색" onClick={() => p.onSearch(term)}>🔍</IconButton></InputAdornment>
+              startAdornment: <InputAdornment position="start"><IconButton size="small" aria-label={L.clear} onClick={() => { setTerm(''); p.onSearch('') }}>✕</IconButton></InputAdornment>,
+              endAdornment: <InputAdornment position="end"><IconButton size="small" aria-label={L.search} onClick={() => p.onSearch(term)}>🔍</IconButton></InputAdornment>
             }} />
         )}
         {p.title}
@@ -51,18 +52,18 @@ export function MjToolbar(p: MjToolbarProps) {
         {p.actions}
         {config.excelImport && (
           <>
-            <Button variant="outlined" disabled={busy === 'example'} onClick={run('example', () => p.onExcelExport?.(true) ?? Promise.resolve())}>양식다운로드</Button>
-            <Button variant="outlined" component="label" htmlFor={fileInputId}>엑셀업로드</Button>
+            <Button variant="outlined" disabled={busy === 'example'} onClick={run('example', () => p.onExcelExport?.(true) ?? Promise.resolve())}>{L.excelTemplate}</Button>
+            <Button variant="outlined" component="label" htmlFor={fileInputId}>{L.excelImport}</Button>
             <input id={fileInputId} type="file" accept=".xlsx" hidden onChange={e => { const f = e.target.files?.[0]; if (f) p.onExcelImport?.(f); e.target.value = '' }} />
           </>
         )}
-        {config.excelExport && <Button variant="outlined" disabled={busy === 'export'} onClick={run('export', () => p.onExcelExport?.() ?? Promise.resolve())}>엑셀다운로드</Button>}
-        {config.printable && <Button variant="contained" color="success" disabled={busy === 'print'} onClick={run('print', p.onPrint)}>인쇄</Button>}
-        {(config.addable ?? true) && p.onAdd && <Button variant="contained" onClick={p.onAdd}>{config.addButtonText ?? `${config.name}등록`}</Button>}
+        {config.excelExport && <Button variant="outlined" disabled={busy === 'export'} onClick={run('export', () => p.onExcelExport?.() ?? Promise.resolve())}>{L.excelExport}</Button>}
+        {config.printable && <Button variant="contained" color="success" disabled={busy === 'print'} onClick={run('print', p.onPrint)}>{L.print}</Button>}
+        {(config.addable ?? true) && p.onAdd && <Button variant="contained" onClick={p.onAdd}>{config.addButtonText ?? `${config.name}${L.addSuffix ? L.addSuffix : ' ' + L.add}`}</Button>}
         {inline && (
           <>
-            <Button variant="contained" color="success" disabled={busy === 'save'} onClick={run('save', p.onSave)}>저장</Button>
-            {(config.deletable ?? true) && <Button variant="contained" color="error" disabled={busy === 'delete' || !p.canDelete} onClick={run('delete', p.onDelete)}>삭제</Button>}
+            <Button variant="contained" color="success" disabled={busy === 'save'} onClick={run('save', p.onSave)}>{L.save}</Button>
+            {(config.deletable ?? true) && <Button variant="contained" color="error" disabled={busy === 'delete' || !p.canDelete} onClick={run('delete', p.onDelete)}>{L.delete}</Button>}
           </>
         )}
       </Box>

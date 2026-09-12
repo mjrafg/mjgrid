@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import type { MjColumn, MjRow } from '../core'
+import type { MjColumn, MjLabels, MjRow } from '../core'
 
 /** Resolve the raw cell value honouring parentPath and path (nested reads). */
 export function readCell(column: MjColumn, row: MjRow): unknown {
@@ -9,7 +9,7 @@ export function readCell(column: MjColumn, row: MjRow): unknown {
   return v
 }
 
-export function displayValue(column: MjColumn, value: unknown, row: MjRow): string {
+export function displayValue(column: MjColumn, value: unknown, row: MjRow, labels?: Pick<MjLabels, 'positive' | 'negative'>): string {
   if (value === null || value === undefined || value === '') return ''
   switch (column.type) {
     case 'string':
@@ -20,7 +20,7 @@ export function displayValue(column: MjColumn, value: unknown, row: MjRow): stri
       return d.isValid() ? d.format(fmt) : String(value)
     }
     case 'boolean':
-      return value ? column.params?.positiveText ?? '사용' : column.params?.negativeText ?? '미사용'
+      return value ? column.params?.positiveText ?? labels?.positive ?? '사용' : column.params?.negativeText ?? labels?.negative ?? '미사용'
     case 'select': {
       const opts = column.params && 'options' in column.params ? column.params.options : undefined
       if (typeof value === 'object' && value !== null) {

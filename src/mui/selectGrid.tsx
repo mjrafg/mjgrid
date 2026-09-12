@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogTitle, IconButton, InputAdornment, TextField } from '@mui/material'
 import { useState } from 'react'
-import type { ColumnOf, MjRow } from '../core'
+import { useMj, type ColumnOf, type MjRow } from '../core'
 import { getGridComponent, type EditorProps, type FieldProps, type TypeRenderers } from './registry'
 import { displayValue } from './value'
 
@@ -25,10 +25,11 @@ interface PickerProps {
  */
 export function SelectGridPicker({ column, value, row, onPick, error, disabled, label, required }: PickerProps) {
   const [open, setOpen] = useState(false)
+  const { labels } = useMj()
   const p = column.params
   if (!p) throw new Error(`selectGrid column "${column.field}" needs params.grid`)
   const text = displayValue(column, value, row)
-  const title = typeof p.dialogTitle === 'function' ? p.dialogTitle(value, row) : p.dialogTitle ?? `${p.grid.name} 선택`
+  const title = typeof p.dialogTitle === 'function' ? p.dialogTitle(value, row) : p.dialogTitle ?? labels.selectTitle(p.grid.name)
   const Grid = getGridComponent()
   const nested = { ...p.grid, editMode: 'readonly' as const, hooks: { ...p.grid.hooks, onRowClick: (r: Record<string, unknown>) => { onPick(r); setOpen(false) } } }
 
@@ -40,8 +41,8 @@ export function SelectGridPicker({ column, value, row, onPick, error, disabled, 
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
-              {text && !disabled && <IconButton size="small" aria-label="지우기" onClick={e => { e.stopPropagation(); onPick(null) }}>✕</IconButton>}
-              <IconButton size="small" aria-label="선택" disabled={disabled} onClick={e => { e.stopPropagation(); setOpen(true) }}>🔍</IconButton>
+              {text && !disabled && <IconButton size="small" aria-label={labels.clearValue} onClick={e => { e.stopPropagation(); onPick(null) }}>✕</IconButton>}
+              <IconButton size="small" aria-label={labels.pick} disabled={disabled} onClick={e => { e.stopPropagation(); setOpen(true) }}>🔍</IconButton>
             </InputAdornment>
           )
         }} />
