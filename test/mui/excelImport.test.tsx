@@ -26,7 +26,7 @@ describe('Excel import', () => {
     const t = toast()
     render(<MjGrid config={config} />, { wrapper: makeWrapper(f.api, t) })
     await screen.findByText('데이터가 없습니다.')
-    const input = document.getElementById('mj-excel-제품') as HTMLInputElement
+    const input = document.querySelector('input[type="file"][accept=".xlsx"]') as HTMLInputElement
     fireEvent.change(input, { target: { files: [xlsxFile([['품목코드', '수량', '단위'], ['A1', 3, 'Kg'], ['A2', '4', 'Kg']])] } })
     const dlg = await screen.findByRole('dialog')
     expect(await within(dlg).findByText(/2건/)).toBeInTheDocument()
@@ -48,7 +48,7 @@ describe('Excel import', () => {
     const t = toast()
     render(<MjGrid config={config} />, { wrapper: makeWrapper(f.api, t) })
     await screen.findByText('데이터가 없습니다.')
-    fireEvent.change(document.getElementById('mj-excel-제품') as HTMLInputElement, { target: { files: [xlsxFile([['품목코드', '수량'], ['', 1]])] } })
+    fireEvent.change(document.querySelector('input[type="file"][accept=".xlsx"]') as HTMLInputElement, { target: { files: [xlsxFile([['품목코드', '수량'], ['', 1]])] } })
     const dlg = await screen.findByRole('dialog')
     await within(dlg).findByText(/1건/)
     fireEvent.click(within(dlg).getByText('등록'))

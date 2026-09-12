@@ -1,5 +1,5 @@
 import { Box, Button, IconButton, InputAdornment, TextField } from '@mui/material'
-import { useState, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { useMj, type MjGridConfig } from '../core'
 
 export interface MjToolbarProps {
@@ -33,7 +33,8 @@ export function MjToolbar(p: MjToolbarProps) {
   const [term, setTerm] = useState(p.search)
   const { busy, run } = useBusy()
   const inline = config.editMode === 'inline'
-  const fileInputId = `mj-excel-${config.name}`.replace(/\s+/g, '-')
+  // React-unique, so two grids with the same name on one page cannot collide
+  const fileInputId = `mj-excel-${useId()}`
 
   return (
     <Box sx={{ display: config.hideToolbar ? 'none' : 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'center', justifyContent: 'space-between', p: 2 }}>
