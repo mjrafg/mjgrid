@@ -53,3 +53,13 @@ export function renderersFor(column: MjColumn): TypeRenderers {
 
 export const hasEditor = (c: MjColumn) => Boolean(renderers.get(c.type)?.Editor)
 export const hasField = (c: MjColumn) => Boolean(renderers.get(c.type)?.Field)
+
+// The picker needs to render a nested grid, and the grid needs the picker's
+// renderers. Registering the grid component here at runtime avoids a module cycle.
+export interface NestedGridProps { config: import('../core').MjGridConfig }
+let gridComponent: ComponentType<NestedGridProps> | null = null
+export const setGridComponent = (c: ComponentType<NestedGridProps>) => { gridComponent = c }
+export const getGridComponent = (): ComponentType<NestedGridProps> => {
+  if (!gridComponent) throw new Error('MjGrid is not registered; import @bluebiz/mjgrid/mui before rendering a picker')
+  return gridComponent
+}

@@ -7,11 +7,12 @@ import { capabilitiesOf, MjApiError, MjValidationError, useMj, useMjQuery, useMj
 import './cells'
 import './editors'
 import './fields'
+import './selectGrid'
 import { MjFilterBar } from './FilterBar'
 import { MjForm, type MjFormMode } from './Form'
 import { MjPagination } from './Pagination'
 import { buildPrintHtml, downloadBlob, openPrintWindow } from './print'
-import { renderersFor } from './registry'
+import { renderersFor, setGridComponent } from './registry'
 import { MjToolbar } from './Toolbar'
 import { readCell } from './value'
 
@@ -168,3 +169,5 @@ export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
     </Box>
   )
 }
+
+setGridComponent(MjGrid)

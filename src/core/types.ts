@@ -173,6 +173,8 @@ export interface MjSelectGridParams extends MjEditableParams {
   displayValue?: (value: unknown, row: Record<string, unknown>) => string
   dialogTitle?: string | ((value: unknown, row: Record<string, unknown>) => string)
   onChange?: (value: unknown, row: Record<string, unknown>) => void
+  /** extra fields to write onto the row when a value is picked, e.g. { vendorCode: picked.code } */
+  patch?: (picked: Record<string, unknown>) => Record<string, unknown>
 }
 
 export type MjAutocompleteParams = MjEditableParams &
