@@ -1,6 +1,6 @@
 {
   "name": "@bluebiz/mjgrid",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "Declarative CRUD grid: one column definition drives the grid, filter bar, create/edit form, inline editing and Excel export. Headless core + MUI adapter.",
   "license": "MIT",
   "type": "module",
