@@ -94,3 +94,14 @@ export function readFileAsArrayBuffer(file: Blob): Promise<ArrayBuffer> {
     r.readAsArrayBuffer(file)
   })
 }
+
+/** Client-side export of already-loaded rows (hosts without a server-side Excel endpoint). */
+export function exportRowsToXlsx(columns: MjColumn[], rows: Record<string, unknown>[], display?: (c: MjColumn, v: unknown, row: Record<string, unknown>) => string): ArrayBuffer {
+  const cols = columns.filter(c => !c.hideOnExcel && c.type !== 'button' && c.type !== 'custom' && !c.formOnly)
+  const aoa: unknown[][] = [['NO', ...cols.map(c => c.headerName)]]
+  rows.forEach((r, i) => aoa.push([i + 1, ...cols.map(c => (display ? display(c, r[c.field], r) : r[c.field] ?? ''))]))
+  const ws = XLSX.utils.aoa_to_sheet(aoa)
+  ws['!cols'] = [{ wch: 6 }, ...cols.map(c => ({ wch: Math.max(10, Math.round((c.width ?? 120) / 7)) }))]
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
+  return XLSX.write(wb, { type: 'array', bookType: 'xlsx' }) as ArrayBuffer
+}

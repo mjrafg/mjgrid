@@ -3,8 +3,13 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": { "dev": "vite --port 5180 --strictPort", "build": "tsc --noEmit && vite build", "preview": "vite preview --port 5180" },
+  "scripts": {
+    "dev": "vite --port 5180 --strictPort",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 5180"
+  },
   "dependencies": {
+    "@bluebiz/mjgrid": "file:../../bluebiz-mjgrid-0.2.0.tgz",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@mui/material": "^5.16.7",
