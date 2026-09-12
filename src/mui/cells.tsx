@@ -63,27 +63,9 @@ function ButtonCell({ column, value, row }: CellProps<'button'>) {
   )
 }
 
-function FileCell({ column, value, row }: CellProps<'file'>) {
-  const name = displayValue(column, value, row)
-  if (!name) return null
-  const ext = name.slice(name.lastIndexOf('.') + 1)
-  return (
-    <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', justifyContent: 'center', width: '100%' }}>
-      <Button size="small" variant="contained" color="secondary" onClick={e => e.stopPropagation()}>{ext}</Button>
-      <Typography variant="body2" noWrap>{name}</Typography>
-    </Box>
-  )
-}
-
-function ImageCell({ value }: CellProps<'image'>) {
-  const f = value as { thumbnailPath?: string; originalName?: string } | null
-  if (!f?.thumbnailPath) return null
-  return <img alt={f.originalName ?? ''} src={f.thumbnailPath} style={{ height: '100%', maxHeight: 36, objectFit: 'contain' }} />
-}
-
 export const defaultCells: Record<MjColumnType, ComponentType<CellProps>> = {
   string: TextCell, number: NumberCell, select: SelectCell as never, date: TextCell, time: TextCell, timeRange: TextCell,
-  weekDays: TextCell, boolean: BooleanCell as never, image: ImageCell as never, file: FileCell as never, address: TextCell,
+  weekDays: TextCell, boolean: BooleanCell as never, image: TextCell, file: TextCell, address: TextCell,
   button: ButtonCell as never, selectGrid: TextCell, autocomplete: TextCell, profile: TextCell, custom: TextCell
 }
 

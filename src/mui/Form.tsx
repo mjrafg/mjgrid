@@ -1,7 +1,8 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid } from '@mui/material'
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
-import { fillUrlTemplate, MjApiError, MjValidationError, useMj, useMjSave, validateField, duplicateMessage, type MjColumn, type MjGridConfig, type MjRow } from '../core'
+import { fillUrlTemplate, MjApiError, MjValidationError, useMj, useMjSave, useMjUpload, validateField, duplicateMessage, type MjColumn, type MjGridConfig, type MjRow } from '../core'
+import { resolvePendingUploads } from './files'
 import { ensureDefaults } from './bootstrap'
 import { renderersFor } from './registry'
 
@@ -35,6 +36,7 @@ ensureDefaults()
 export function MjForm({ config, mode, row, onClose }: MjFormProps) {
   const { api, toast, labels: L } = useMj()
   const { saveOne, deleteOne, isSaving } = useMjSave(config)
+  const { upload } = useMjUpload()
   const columns = formColumns(config, mode)
   const passwordFields = columns.filter(c => c.type === 'string' && c.params?.inputType === 'password').map(c => c.field)
   const defaults: Record<string, unknown> = { ...(row ?? {}) }
@@ -63,8 +65,9 @@ export function MjForm({ config, mode, row, onClose }: MjFormProps) {
   const submit = handleSubmit(async data => {
     if (mode === 'view') return
     if (!(await validateAll(data))) return
-    const payload: Record<string, unknown> = { ...(row ?? {}), ...data }
+    let payload: Record<string, unknown> = { ...(row ?? {}), ...data }
     for (const f of passwordFields) if (!payload[f]) delete payload[f]
+    try { payload = await resolvePendingUploads(columns, payload, upload) } catch (e) { if (e instanceof MjApiError) { toast.error(e.message); return } throw e }
     if (config.hooks?.onSubmit) { config.hooks.onSubmit((row ?? {}) as Record<string, unknown>, payload); onClose(true); return }
     try {
       await saveOne({ row: payload, mode: mode === 'insert' ? 'insert' : 'update' })

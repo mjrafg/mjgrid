@@ -134,6 +134,8 @@ export interface MjBooleanParams extends MjEditableParams {
 export interface MjFileParams extends MjEditableParams {
   /** server-side storage bucket: FILE | MES | SIGN | PROFILE | HACCP | USER | ANNO */
   storageType?: string
+  /** server stores under a date-based sub folder */
+  dateBase?: boolean
   maxSize?: number
   accept?: Record<string, string[]>
   placeholder?: string
