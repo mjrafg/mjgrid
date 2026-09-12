@@ -10,6 +10,7 @@ import { MjPagination } from './Pagination'
 import { buildPrintHtml, downloadBlob, openPrintWindow } from './print'
 import { renderersFor, setGridComponent } from './registry'
 import { MjToolbar } from './Toolbar'
+import { ExcelImportDialog } from './ExcelImport'
 import { readCell } from './value'
 
 export interface MjGridProps {
@@ -51,6 +52,7 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
   const inline = mode === 'inline'
   const [selected, setSelected] = useState<string | null>(null)
   const [dialog, setDialog] = useState<{ mode: MjFormMode; row?: Partial<MjRow> } | null>(null)
+  const [importFile, setImportFile] = useState<File | null>(null)
 
   // inline mode edits a client copy of the current page; reload it whenever the server rows change
   useEffect(() => { if (inline) edit.load(q.rows) }, [inline, q.rows, edit.load]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -188,7 +190,7 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }} data-testid="mj-grid">
       <MjFilterBar config={config} onSearch={q.setFilters} />
       <MjToolbar config={config} search={q.search} onSearch={q.setSearch} onAdd={onAdd} onSave={inline ? onSave : undefined}
-        onDelete={inline ? onDelete : undefined} canDelete={Boolean(selected)} onExcelExport={onExcelExport} onPrint={onPrint} title={title} actions={actions} />
+        onDelete={inline ? onDelete : undefined} canDelete={Boolean(selected)} onExcelExport={onExcelExport} onExcelImport={setImportFile} onPrint={onPrint} title={title} actions={actions} />
       {q.isFetching && <LinearProgress />}
       {q.error && <Box sx={{ color: 'error.main', px: 2 }} role="alert">{q.error.message}</Box>}
       <TableContainer sx={{ flex: 1 }}>
@@ -240,6 +242,7 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
       </TableContainer>
       <MjPagination page={q.page} pageCount={q.pageCount} total={q.total} pageSize={q.pageSize} onPageChange={q.setPage} />
 
+      {config.excelImport && <ExcelImportDialog config={config} file={importFile} onClose={imported => { setImportFile(null); if (imported) void q.refresh() }} />}
       <Dialog open={dialog !== null} onClose={() => { setDialog(null); config.hooks?.onDialogClose?.() }} fullWidth maxWidth={config.dialogSize ?? 'sm'}>
         <DialogTitle align="center">{config.name} {dialog?.mode === 'insert' ? L.register : dialog?.mode === 'view' ? L.view : L.edit}</DialogTitle>
         <DialogContent>
@@ -250,4 +253,4 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
   )
 })
 
-setGridComponent(MjGrid)
+setGridComponent(MjGrid as never)

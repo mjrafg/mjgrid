@@ -66,7 +66,7 @@ export const hasField = (c: MjColumn) => Boolean(renderers.get(c.type)?.Field)
 
 // The picker needs to render a nested grid, and the grid needs the picker's
 // renderers. Registering the grid component here at runtime avoids a module cycle.
-export interface NestedGridProps { config: import('../core').MjGridConfig }
+export interface NestedGridProps { config: import('../core').MjGridConfig; ref?: import('react').Ref<unknown> }
 let gridComponent: ComponentType<NestedGridProps> | null = null
 export const setGridComponent = (c: ComponentType<NestedGridProps>) => { gridComponent = c }
 export const getGridComponent = (): ComponentType<NestedGridProps> => {

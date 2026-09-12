@@ -41,9 +41,9 @@
     "check:esm": "node scripts/check-esm.mjs"
   },
   "peerDependencies": {
-    "@mui/material": ">=5.12",
     "@emotion/react": ">=11",
     "@emotion/styled": ">=11",
+    "@mui/material": ">=5.12",
     "react": ">=18",
     "react-dom": ">=18"
   },
@@ -63,6 +63,7 @@
     "@tanstack/react-table": "^8.20.5",
     "dayjs": "^1.11.13",
     "react-hook-form": "^7.53.0",
+    "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },
   "devDependencies": {
