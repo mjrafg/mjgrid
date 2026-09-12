@@ -1,0 +1,92 @@
+import { IconButton, MenuItem, TextField } from '@mui/material'
+import Box from '@mui/material/Box'
+import { useState } from 'react'
+import { filterFor, useMjOptions, type MjColumn, type MjFilter, type MjGridConfig } from '../core'
+
+export interface MjFilterBarProps {
+  config: MjGridConfig
+  onSearch: (filters: MjFilter[]) => void
+}
+
+function SelectFilter({ column, value, onChange }: { column: Extract<MjColumn, { type: 'select' }>; value: string; onChange: (v: string) => void }) {
+  const { options } = useMjOptions(column.params)
+  return (
+    <TextField select size="small" label={column.headerName} value={value} sx={{ minWidth: 160 }} onChange={e => onChange(e.target.value)}>
+      {!column.params?.hideAllOption && <MenuItem value=""><em>전체</em></MenuItem>}
+      {options.map(o => <MenuItem key={String(o.value)} value={String(o.value)}>{o.text}</MenuItem>)}
+    </TextField>
+  )
+}
+
+/**
+ * Filter row built from columns marked showOnFilterBar (+ extraFilterBarColumns).
+ * No magic "all" sentinel: empty string means no filter.
+ * Select/boolean/date changes apply immediately; text applies on Enter or the search button.
+ * Nothing fires on mount (the legacy bar issued an extra request via an effect on first render).
+ */
+export function MjFilterBar({ config, onSearch }: MjFilterBarProps) {
+  const columns = [...(config.extraFilterBarColumns ?? []).map(c => ({ ...c, showOnFilterBar: true })), ...config.columns]
+    .filter(c => c.showOnFilterBar)
+    .sort((a, b) => (a.filterBarIndex ?? 1) - (b.filterBarIndex ?? 1))
+  const [values, setValues] = useState<Record<string, unknown>>({})
+  if (columns.length === 0) return null
+
+  const apply = (next: Record<string, unknown>) => {
+    const filters: MjFilter[] = []
+    for (const c of columns) {
+      const v = next[c.field]
+      if (v === undefined || v === null || v === '') continue
+      if (c.getFilters) { filters.push(...c.getFilters(String(v))); continue }
+      const f = filterFor(c, c.type === 'boolean' ? v === 'true' : v)
+      if (f) filters.push(f)
+    }
+    onSearch(filters)
+  }
+  const set = (c: MjColumn, v: unknown, immediate: boolean) => {
+    const next = { ...values, [c.field]: v }
+    setValues(next)
+    c.onFilterChange?.(v)
+    if (immediate) apply(next)
+  }
+
+  return (
+    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center', px: 2, pt: 2 }}>
+      {columns.map(c => {
+        const v = values[c.field]
+        switch (c.type) {
+          case 'select':
+            return <SelectFilter key={c.field} column={c} value={String(v ?? '')} onChange={x => set(c, x, true)} />
+          case 'boolean':
+            return (
+              <TextField key={c.field} select size="small" label={c.headerName} value={String(v ?? '')} sx={{ minWidth: 140 }} onChange={e => set(c, e.target.value, true)}>
+                <MenuItem value=""><em>전체</em></MenuItem>
+                <MenuItem value="true">{c.params?.positiveText ?? '사용'}</MenuItem>
+                <MenuItem value="false">{c.params?.negativeText ?? '미사용'}</MenuItem>
+              </TextField>
+            )
+          case 'date': {
+            const r = (v as { startDate?: string; endDate?: string } | undefined) ?? {}
+            const upd = (k: 'startDate' | 'endDate', s: string) => {
+              const nr = { ...r, [k]: s || undefined }
+              const both = nr.startDate && nr.endDate
+              set(c, both ? { startDate: new Date(nr.startDate!), endDate: new Date(nr.endDate!), raw: nr } : { raw: nr }, Boolean(both))
+            }
+            return (
+              <Box key={c.field} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                <TextField size="small" type="date" label={c.headerName} InputLabelProps={{ shrink: true }} value={r.startDate ?? ''} onChange={e => upd('startDate', e.target.value)} />
+                <span>~</span>
+                <TextField size="small" type="date" InputLabelProps={{ shrink: true }} value={r.endDate ?? ''} onChange={e => upd('endDate', e.target.value)} />
+              </Box>
+            )
+          }
+          default:
+            return (
+              <TextField key={c.field} size="small" type={c.type === 'number' ? 'number' : 'text'} label={c.headerName} value={String(v ?? '')}
+                onChange={e => set(c, e.target.value, false)} onKeyDown={e => { if (e.key === 'Enter') apply(values) }} />
+            )
+        }
+      })}
+      <IconButton color="primary" aria-label="검색" onClick={() => apply(values)}>🔍</IconButton>
+    </Box>
+  )
+}
