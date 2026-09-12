@@ -242,11 +242,11 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
       </TableContainer>
       <MjPagination page={q.page} pageCount={q.pageCount} total={q.total} pageSize={q.pageSize} onPageChange={q.setPage} />
 
-      {config.excelImport && <ExcelImportDialog config={config} file={importFile} onClose={imported => { setImportFile(null); if (imported) void q.refresh() }} />}
+      {config.excelImport && <ExcelImportDialog config={config} file={importFile} onClose={() => setImportFile(null)} />}
       <Dialog open={dialog !== null} onClose={() => { setDialog(null); config.hooks?.onDialogClose?.() }} fullWidth maxWidth={config.dialogSize ?? 'sm'}>
         <DialogTitle align="center">{config.name} {dialog?.mode === 'insert' ? L.register : dialog?.mode === 'view' ? L.view : L.edit}</DialogTitle>
         <DialogContent>
-          {dialog && <MjForm config={config} mode={dialog.mode} row={dialog.row} onClose={changed => { setDialog(null); config.hooks?.onDialogClose?.(); if (changed) void q.refresh() }} />}
+          {dialog && <MjForm config={config} mode={dialog.mode} row={dialog.row} onClose={() => { setDialog(null); config.hooks?.onDialogClose?.() }} />}
         </DialogContent>
       </Dialog>
     </Box>
