@@ -3,6 +3,26 @@
   "version": "1.0.0",
   "description": "Declarative CRUD grid: one column definition drives the grid, filter bar, create/edit form, inline editing and Excel export. Headless core + MUI adapter.",
   "license": "MIT",
+  "author": "mjrafg",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mjrafg/mjgrid.git"
+  },
+  "homepage": "https://github.com/mjrafg/mjgrid#readme",
+  "bugs": {
+    "url": "https://github.com/mjrafg/mjgrid/issues"
+  },
+  "keywords": [
+    "react",
+    "grid",
+    "datagrid",
+    "crud",
+    "mui",
+    "tanstack-table",
+    "tanstack-query",
+    "excel",
+    "headless"
+  ],
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
@@ -28,7 +48,9 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsup",

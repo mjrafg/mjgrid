@@ -11,4 +11,4 @@ Ground-up replacement for the `MjGrid` folder of the HACCP frontends (legacy aud
 - Excel import with editable preview and validation; server or client-side export; HTML-escaped print.
 - Client-side mode with local filtering/sorting; imperative `MjGridHandle`.
 - i18n labels (ko/en), configurable file endpoints, injected transport (`MjApiClient`).
-- 114 tests; native ESM/CJS smoke test in `prepublishOnly`.
+- 116 tests; native ESM/CJS smoke test in `prepublishOnly`; GitHub Actions CI runs the full gate.

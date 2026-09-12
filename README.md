@@ -179,6 +179,89 @@ ref.current.openInsert(defaults?) · openEdit(row) · openView(row)
 5. A write either succeeds or throws. Print output is HTML-escaped.
 6. `scripts/check-esm.mjs` loads every built entry under Node's native ESM/CJS loaders before publish.
 
+## Architecture
+
+```
+src/
+├── core/                 headless — no UI dependency (published as @bluebiz/mjgrid/core)
+│   ├── types.ts          MjColumn discriminated union (16 types), MjGridConfig, MjGridHooks, MjRule
+│   ├── protocol.ts       MjApiClient, MjEnvelope, buildServerSideRequest, assertOk / MjApiError
+│   ├── url.ts            mjUrls(config) → fetch/insert/update/delete URLs (MjUrlError on misuse)
+│   ├── registry.ts       column-type capabilities + value codecs (parse/format/filter operator)
+│   ├── validation.ts     validateField / validateRows, applyMask, fillUrlTemplate
+│   ├── localQuery.ts     client-side mode: applyFilters / applySort / pageOf
+│   ├── excel.ts          parseExcelRows, buildTemplateWorkbook, exportRowsToXlsx (SheetJS)
+│   ├── labels.ts         koLabels / enLabels          messages.ts  koMessages / enMessages
+│   └── react/            MjProvider · useMjQuery · useMjRows · useMjSave · useMjOptions · useMjUpload
+└── mui/                  MUI 5 adapter (published as @bluebiz/mjgrid/mui and re-exported from the root)
+    ├── Grid.tsx          <MjGrid> — TanStack Table + toolbar, filter bar, pagination, footer, dialogs
+    ├── Form.tsx          create / edit / view dialog (react-hook-form), deferred file uploads
+    ├── FilterBar.tsx  Toolbar.tsx  Pagination.tsx  ExcelImport.tsx  print.ts
+    ├── cells.tsx  editors.tsx  fields.tsx  fields2.tsx  files.tsx  selectGrid.tsx
+    └── registry.tsx      registerType / renderersFor — Cell, Editor (inline), Field (form) per type
+```
+
+**Data flow.** `MjGrid` derives a `ServerSideRequest` from `{ page, sort, search, filters, defaultFilters }`, hands it to `useMjQuery` (TanStack Query key = resource + request), and renders the rows with TanStack Table. Inline edits live in `useMjRows` (dirty tracking, row actions, sequence field) and are flushed by `useMjSave` as `insertBulk` / `updateBulk` / per-row delete. The dialog form validates with `validateRows` against the same `rules`, uploads staged files, then posts one row. Select options are loaded once per `fetchUrl` through the shared query cache, so ten select columns pointing at the same endpoint cost one request.
+
+**Extending.** `registerType('myType', { Cell, Editor, Field })` adds or overrides renderers for a type; registration is merge-based, so the built-in renderers (`ensureDefaults()`) and yours can load in any order. The core codecs decide how a value is parsed, formatted, filtered and exported — add one there if the new type stores data differently.
+
+## Migrating from the legacy `MjGrid` (`src/@core/mjGrid`)
+
+The API was redesigned rather than ported. The mapping below covers every legacy prop that appears in the HACCP pages.
+
+### Grid props → `MjGridConfig`
+
+| legacy (`MjGridProps`) | new |
+|---|---|
+| `mainUrl` | `resource` |
+| `fetchUrl` / `insertUrl` / `insertBulkUrl` / `updateUrl` / `deleteUrl` | `urls.{fetch,insert,insertBulk,update,delete}` |
+| `type: 'serverSide' \| 'clientSide'` | inferred: `resource` ⇒ server, `rows` ⇒ client |
+| `updateMode: 'extend'` | `editMode: 'dialog'` (default) |
+| `updateMode: 'inline'` | `editMode: 'inline'` |
+| `updateMode: 'none'` | `editMode: 'readonly'` |
+| `modalSize` / `updateDialogMaxWidth` | `dialogSize` |
+| `extraUpdateColumns` | `extraFormColumns` |
+| `afterFetchedData` | `hooks.afterFetch` |
+| `onSubmit`, `onInserted`, `onAddClick`, `onBeforeSave`, `onBeforeSaveSingle`, `onDataInserted/Updated/Deleted`, `onDeleteValidate`, `onFilterChange`, `validate` | same names under `hooks` |
+| `onRowUpdateDialogClose` | `hooks.onDialogClose` |
+| `customizePrintColor` | `printColor` |
+| `hasRowAction` / `hasSequence` / `rowDefaultData` (edit grid) | `rowActions` / `sequenceField` / `hooks.onAddClick` defaults via `addRow(defaults)` |
+| `customValidate` / `beforeSave` / `onSave` / `afterSave` (edit grid) | `hooks.validate` / `hooks.onBeforeSave` / `hooks.onSave` / `hooks.afterSave` |
+| `title`, `actionElements`, `addButtonIcon`, `mode` | dropped — compose around `<MjGrid>` |
+
+`name`, `columns`, `rows`, `pageSize`, `softDelete`, `excelExport`, `excelImport`, `extraFilters`, `extraFilterBarColumns`, `addable`, `deletable`, `defaultFilters`, `defaultSort`, `hideToolbar`, `addButtonText`, `showToolbarSearch`, `printable` keep their names.
+
+### Column types
+
+| legacy `columnType` | new `type` | notes |
+|---|---|---|
+| `MjString` | `string` | `placeHolder` → `placeholder`; `type: 'password'` → `inputType: 'password'` |
+| `MjNumber` | `number` | `unit` → `unitField`; thousands separator is always on |
+| `MjSelect` | `select` | `onSelectValueChange` → `onChange`; `columnProp` → `path` |
+| `MjSelectGrid` | `selectGrid` | `gridSettings` → `grid`; `getDisplayValue` → `displayValue`; `getModalTitle` → `dialogTitle`; `onSelectGridValueChanged` → `patch` |
+| `MjAutoComplete` | `autocomplete` | |
+| `MjDateOnly` | `date` | |
+| `MjDateTime` | `date` | legacy stored dates as strings anyway; add `format: 'YYYY-MM-DD HH:mm'` for display |
+| `MjTime` / `MjTimeRange` / `MjWeekDaySelect` | `time` / `timeRange` / `weekDays` | |
+| `MjBoolean` | `boolean` | `colorChange` → `colorPositive`; `onBooleanClick` → `onClick` |
+| `MjImage` / `MjFile` / `MjProfile` | `image` / `file` / `profile` | `onImageChange` → `onChange`; uploads are deferred to submit |
+| `MjAddress` | `address` | |
+| `MjButton` | `button` | `onButtonClick` → `onClick` |
+| `MjCustom` | `custom` | `customNode` → `node` |
+| `MjEmpty` | — | use `formOnly: true` on a column, or omit the column |
+
+### Column props
+
+`justUpdate` → `formOnly`, `columnProp` → `path`, `columnParentProp` → `parentPath`, `customizePrintData` → `printFormat`, `customizePrintColor` → `printColor`, `updateViewIndex` → `formIndex`, `controllerSpacePercent` → `span` (1–12), `getFilterProps` → `getFilters`, `filterValueChange` → `onFilterChange`, `customRenderCell` → `renderCell`, `hideNativeFilter` → `filterable: false`. Rules keep their names; `validate(row)` returns a message or `undefined`.
+
+### Refs
+
+`MjGridRefProps.refresh/setFilters/getRows/getRowsNoPaging` → `MjGridHandle.refresh/setFilters/getRows/fetchAll`; `addUnsavedRows` → `addRow`; `MjGridEditRefProps.validate/getRows/addEmptyRow` → `getDirtyRows` / `getRows` / `addRow`; `setRows`, `setTitle`, `setLoading`, `setColumns` are gone — change the `config` prop instead.
+
+### Transport
+
+The legacy grid imported `apiService` and read the token itself. The new grid receives an `MjApiClient`; the HACCP admin front's adapter is `src/mjgrid/api.ts` (≈25 lines over the existing `apiService` / `axiosInstance`). Server contract, header names and the `{ data, status, error }` envelope are unchanged, so no backend change is required.
+
 ## Development
 
 ```
@@ -187,3 +270,19 @@ sh scripts/gate.sh        # typecheck, lint, tests, build, native-ESM smoke test
 npm run build
 cd examples/demo && npm install && npm run dev   # http://localhost:5180
 ```
+
+`scripts/gate.sh` is what CI runs (`.github/workflows/ci.yml`): every step reports its own exit code, so a red test can never hide behind a green build.
+
+### Tests
+
+`test/core` covers the protocol, URL resolution, validation, registry codecs, Excel parsing/export and local queries with no DOM; `test/mui` renders the grid, form, filter bar, inline editor, Excel import and toolbar with `@testing-library/react` against a fake `MjApiClient`. 116 tests, ~10 s.
+
+### Releasing
+
+1. Update `CHANGELOG.md` and bump `version` in `package.json`.
+2. `npm publish` — `prepublishOnly` runs typecheck, tests, build and the native ESM/CJS smoke test.
+3. `git tag v<version> && git push --tags`.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
