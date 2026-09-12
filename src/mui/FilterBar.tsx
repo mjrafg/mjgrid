@@ -1,6 +1,7 @@
-import { Box, IconButton, MenuItem, TextField } from '@mui/material'
+import { Box, Button, IconButton, MenuItem, TextField } from '@mui/material'
 import { useState } from 'react'
-import { filterFor, useMj, useMjOptions, type MjColumn, type MjFilter, type MjGridConfig } from '../core'
+import dayjs from 'dayjs'
+import { filterFor, useMj, useMjOptions, type MjColumn, type MjDateRange, type MjFilter, type MjGridConfig } from '../core'
 
 export interface MjFilterBarProps {
   config: MjGridConfig
@@ -38,7 +39,15 @@ export function MjFilterBar({ config, onSearch }: MjFilterBarProps) {
       const v = next[c.field]
       if (v === undefined || v === null || v === '') continue
       if (c.getFilters) { filters.push(...c.getFilters(String(v))); continue }
-      const f = filterFor(c, c.type === 'boolean' ? v === 'true' : v)
+      let fv: unknown = v
+      if (c.type === 'boolean') fv = v === 'true'
+      if (c.type === 'date') {
+        const r = v as { startDate?: string; endDate?: string }
+        if (!r.startDate || !r.endDate) continue
+        // dayjs parses 'YYYY-MM-DD' as local midnight; new Date() would use UTC and shift a day in negative offsets
+        fv = { startDate: dayjs(r.startDate).toDate(), endDate: dayjs(r.endDate).toDate() }
+      }
+      const f = filterFor(c, fv)
       if (f) filters.push(f)
     }
     onSearch(filters)
@@ -67,16 +76,24 @@ export function MjFilterBar({ config, onSearch }: MjFilterBarProps) {
             )
           case 'date': {
             const r = (v as { startDate?: string; endDate?: string } | undefined) ?? {}
-            const upd = (k: 'startDate' | 'endDate', s: string) => {
-              const nr = { ...r, [k]: s || undefined }
-              const both = nr.startDate && nr.endDate
-              set(c, both ? { startDate: new Date(nr.startDate!), endDate: new Date(nr.endDate!), raw: nr } : { raw: nr }, Boolean(both))
-            }
+            // state keeps the raw 'YYYY-MM-DD' strings; apply() converts. Applies immediately whenever both ends are set or the range is cleared.
+            const setRange = (nr: { startDate?: string; endDate?: string }) => set(c, nr, Boolean((nr.startDate && nr.endDate) || (!nr.startDate && !nr.endDate)))
+            const upd = (k: 'startDate' | 'endDate', s: string) => setRange({ ...r, [k]: s || undefined })
+            const presets: MjDateRange[] = c.params?.ranges ?? [
+              { name: labels.today, startDate: () => new Date(), endDate: () => new Date() },
+              { name: labels.week, startDate: () => dayjs().subtract(1, 'week').toDate(), endDate: () => new Date() },
+              { name: labels.month, startDate: () => dayjs().subtract(1, 'month').toDate(), endDate: () => new Date() }
+            ]
+            const fmt = (d: Date) => dayjs(d).format('YYYY-MM-DD')
+            const active = (p: MjDateRange) => r.startDate === fmt(p.startDate()) && r.endDate === fmt(p.endDate())
             return (
-              <Box key={c.field} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              <Box key={c.field} sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
                 <TextField size="small" type="date" label={c.headerName} InputLabelProps={{ shrink: true }} value={r.startDate ?? ''} onChange={e => upd('startDate', e.target.value)} />
                 <span>~</span>
                 <TextField size="small" type="date" InputLabelProps={{ shrink: true }} value={r.endDate ?? ''} onChange={e => upd('endDate', e.target.value)} />
+                {presets.map(p => (
+                  <Button key={p.name} size="small" variant={active(p) ? 'contained' : 'text'} onClick={() => setRange(active(p) ? {} : { startDate: fmt(p.startDate()), endDate: fmt(p.endDate()) })}>{p.name}</Button>
+                ))}
               </Box>
             )
           }

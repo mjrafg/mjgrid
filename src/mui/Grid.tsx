@@ -1,8 +1,8 @@
-import { Box, Dialog, DialogContent, DialogTitle, LinearProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel } from '@mui/material'
+import { Box, Dialog, DialogContent, DialogTitle, IconButton, LinearProgress, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, TableSortLabel } from '@mui/material'
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
 import dayjs from 'dayjs'
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { capabilitiesOf, MjApiError, MjValidationError, useMj, useMjQuery, useMjRows, useMjSave, type MjColumn, type MjGridConfig, type MjRow } from '../core'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState, type ReactNode } from 'react'
+import { capabilitiesOf, MjApiError, MjValidationError, useMj, useMjQuery, useMjRows, useMjSave, type MjColumn, type MjFilter, type MjGridConfig, type MjRow } from '../core'
 import { ensureDefaults } from './bootstrap'
 import { MjFilterBar } from './FilterBar'
 import { MjForm, type MjFormMode } from './Form'
@@ -20,11 +20,29 @@ export interface MjGridProps {
   onSelect?: (row: MjRow | null) => void
 }
 
+/** Imperative API (legacy: gridRef.current.refresh() etc.). */
+export interface MjGridHandle {
+  refresh: () => Promise<void>
+  setFilters: (filters: MjFilter[]) => void
+  setSearch: (term: string) => void
+  getRows: () => MjRow[]
+  getDirtyRows: () => MjRow[]
+  fetchAll: () => Promise<MjRow[]>
+  addRow: (defaults?: Record<string, unknown>, index?: number) => MjRow | undefined
+  removeRow: (rowId: string) => void
+  getSelected: () => MjRow | null
+  clearSelection: () => void
+  save: () => Promise<void>
+  openInsert: (defaults?: Record<string, unknown>) => void
+  openEdit: (row: MjRow) => void
+  openView: (row: MjRow) => void
+}
+
 const sortKey = (c: MjColumn) => c.sortField ?? (c.path ? `${c.field}.${c.path}` : c.field)
 
 ensureDefaults()
 
-export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
+export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ config, title, actions, onSelect }, ref) {
   const { toast, labels: L } = useMj()
   const q = useMjQuery(config)
   const edit = useMjRows(config.columns)
@@ -39,6 +57,11 @@ export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
   const rows = inline ? edit.visibleRows : q.rows
 
   const visibleColumns = useMemo(() => config.columns.filter(c => !c.formOnly && !c.hide), [config.columns])
+  const rowActions = inline && Boolean(config.rowActions)
+  const hasFooter = visibleColumns.some(c => c.footerText !== undefined)
+
+  // keepOneRow: an inline grid that must always offer an editable row
+  useEffect(() => { if (inline && config.keepOneRow && edit.visibleRows.length === 0) edit.addRow() }, [inline, config.keepOneRow, edit.visibleRows.length, edit])
 
   const tableColumns = useMemo<ColumnDef<MjRow>[]>(() => visibleColumns.map(c => ({
     id: c.field,
@@ -59,7 +82,17 @@ export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
     }
   })), [visibleColumns, inline, edit])
 
-  const table = useReactTable({ data: rows, columns: tableColumns, getCoreRowModel: getCoreRowModel(), manualPagination: true, manualSorting: true, manualFiltering: true, getRowId: r => r.id })
+  const actionColumn = useMemo<ColumnDef<MjRow>[]>(() => rowActions ? [{
+    id: '__actions', header: '+ / -', size: 90, enableSorting: false,
+    cell: ({ row }) => (
+      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }} onClick={e => e.stopPropagation()}>
+        <IconButton size="small" aria-label={L.rowAdd} onClick={() => edit.addRow(undefined, edit.rows.findIndex(r => r.id === row.original.id) + 1)}>＋</IconButton>
+        <IconButton size="small" aria-label={L.rowRemove} onClick={() => edit.removeRow(row.original.id)}>－</IconButton>
+      </Box>
+    )
+  }] : [], [rowActions, edit, L])
+
+  const table = useReactTable({ data: rows, columns: [...tableColumns, ...actionColumn], getCoreRowModel: getCoreRowModel(), manualPagination: true, manualSorting: true, manualFiltering: true, getRowId: r => r.id })
 
   const onHeaderSort = (c: MjColumn) => {
     if (c.sortable === false || c.type === 'button') return
@@ -85,18 +118,37 @@ export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
 
   const onSave = useCallback(async () => {
     try {
-      if (config.hooks?.validate && !(await config.hooks.validate(edit.dirtyRows))) return
-      const r = await saveBatch(edit.rows)
+      // sequenceField: the visible order is data; rows whose position changed become dirty
+      let rowsToSave = edit.rows
+      if (config.sequenceField) {
+        const seqKey = config.sequenceField
+        let i = 0
+        rowsToSave = edit.rows.map(r => {
+          if (r.__state === 'delete') return r
+          const seq = i++
+          if (r[seqKey] === seq) return r
+          return { ...r, [seqKey]: seq, __state: r.__state === 'insert' ? 'insert' : 'update' }
+        })
+      }
+      const dirty = rowsToSave.filter(r => r.__state && r.__state !== 'none')
+      if (config.hooks?.validate && !(await config.hooks.validate(dirty))) return
+      if (config.hooks?.onSave) {
+        if (dirty.length === 0) { toast.error(L.noChanges); return }
+        await config.hooks.onSave(dirty, rowsToSave)
+        toast.success(L.saved); edit.clearErrors(); config.hooks.afterSave?.(rowsToSave); return
+      }
+      const r = await saveBatch(rowsToSave)
       const n = r.inserted.length + r.updated.length + r.deleted.length
       if (n === 0) { toast.error(L.noChanges); return }
       toast.success(L.saved)
       edit.clearErrors()
+      config.hooks?.afterSave?.(rowsToSave)
     } catch (e) {
       if (e instanceof MjValidationError) { edit.setErrors(e.errors); toast.error(e.errors.map(x => `${L.errorPrefix(x.rowIndex + 1)}${x.message}`).join('\n')) }
       else if (e instanceof MjApiError) toast.error(e.message)
       else throw e
     }
-  }, [config.hooks, edit, saveBatch, toast, L])
+  }, [config.hooks, config.sequenceField, edit, saveBatch, toast, L])
 
   const onDelete = useCallback(async () => {
     if (!selected) return
@@ -108,6 +160,23 @@ export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
     try { await deleteOne(row.id); toast.success(L.deleted); setSelected(null) }
     catch (e) { if (e instanceof MjApiError) toast.error(e.message); else throw e }
   }, [selected, edit, config.hooks, deleteOne, toast, L])
+
+  useImperativeHandle(ref, () => ({
+    refresh: async () => { await q.refresh() },
+    setFilters: q.setFilters,
+    setSearch: q.setSearch,
+    getRows: () => (inline ? edit.rows : q.rows),
+    getDirtyRows: () => edit.dirtyRows,
+    fetchAll: q.fetchAll,
+    addRow: (defaults, index) => (inline ? edit.addRow(defaults, index) : undefined),
+    removeRow: edit.removeRow,
+    getSelected: () => edit.rows.find(r => r.id === selected) ?? q.rows.find(r => r.id === selected) ?? null,
+    clearSelection: () => setSelected(null),
+    save: onSave,
+    openInsert: defaults => setDialog({ mode: 'insert', row: defaults }),
+    openEdit: row => setDialog({ mode: 'update', row }),
+    openView: row => setDialog({ mode: 'view', row })
+  }), [q, edit, inline, selected, onSave])
 
   const onExcelExport = async (example = false) => {
     const blob = await q.exportExcel(example)
@@ -128,7 +197,8 @@ export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
             {table.getHeaderGroups().map(hg => (
               <TableRow key={hg.id}>
                 {hg.headers.map(h => {
-                  const c = visibleColumns.find(x => x.field === h.column.id)!
+                  const c = visibleColumns.find(x => x.field === h.column.id)
+                  if (!c) return <TableCell key={h.id} style={{ width: h.getSize(), textAlign: 'center' }}>{flexRender(h.column.columnDef.header, h.getContext())}</TableCell>
                   const active = q.sort.field === sortKey(c)
                   return (
                     <TableCell key={h.id} style={{ width: h.getSize(), textAlign: capabilitiesOf(c).align }} sortDirection={active ? q.sort.direction : false}>
@@ -151,9 +221,21 @@ export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
               </TableRow>
             ))}
             {rows.length === 0 && !q.isLoading && (
-              <TableRow><TableCell colSpan={visibleColumns.length} align="center" sx={{ py: 6, color: 'text.secondary' }}>{L.noData}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={visibleColumns.length + (rowActions ? 1 : 0)} align="center" sx={{ py: 6, color: 'text.secondary' }}>{L.noData}</TableCell></TableRow>
             )}
           </TableBody>
+          {hasFooter && (
+            <TableFooter>
+              <TableRow>
+                {visibleColumns.map(c => (
+                  <TableCell key={c.field} align={c.footerAlign ?? 'left'} sx={{ fontWeight: 600 }}>
+                    {typeof c.footerText === 'function' ? c.footerText(rows) : c.footerText ?? ''}
+                  </TableCell>
+                ))}
+                {rowActions && <TableCell />}
+              </TableRow>
+            </TableFooter>
+          )}
         </Table>
       </TableContainer>
       <MjPagination page={q.page} pageCount={q.pageCount} total={q.total} pageSize={q.pageSize} onPageChange={q.setPage} />
@@ -166,6 +248,6 @@ export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
       </Dialog>
     </Box>
   )
-}
+})
 
 setGridComponent(MjGrid)

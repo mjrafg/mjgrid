@@ -52,6 +52,9 @@ export function MjForm({ config, mode, row, onClose }: MjFormProps) {
     for (const c of columns) {
       const msgs = await validateField(c, data)
       if (msgs) { setError(c.field, { type: 'value', message: msgs.join('\n') }); ok = false; continue }
+      if (c.type === 'string' && c.params?.valueCheck && data[c.field] !== undefined && data[c.field] !== '') {
+        await c.params.valueCheck(String(data[c.field]), data)
+      }
       if (c.type === 'string' && c.params?.valueCheckUrl && data[c.field] !== undefined && data[c.field] !== '') {
         // legacy contract: URL tokens come from the row with `value` = new value and the field itself = original value
         const url = fillUrlTemplate(c.params.valueCheckUrl, { ...data, value: data[c.field], [c.field]: row?.[c.field] ?? '' })
