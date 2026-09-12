@@ -1,5 +1,4 @@
-import { IconButton, MenuItem, TextField } from '@mui/material'
-import Box from '@mui/material/Box'
+import { Box, IconButton, MenuItem, TextField } from '@mui/material'
 import { useState } from 'react'
 import { filterFor, useMjOptions, type MjColumn, type MjFilter, type MjGridConfig } from '../core'
 

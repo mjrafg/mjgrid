@@ -1,5 +1,4 @@
-import { Button, IconButton, InputAdornment, TextField } from '@mui/material'
-import Box from '@mui/material/Box'
+import { Box, Button, IconButton, InputAdornment, TextField } from '@mui/material'
 import { useState, type ReactNode } from 'react'
 import type { MjGridConfig } from '../core'
 

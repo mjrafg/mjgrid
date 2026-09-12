@@ -2,6 +2,7 @@ import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid } from 
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { fillUrlTemplate, MjApiError, MjValidationError, useMj, useMjSave, validateField, duplicateMessage, type MjColumn, type MjGridConfig, type MjRow } from '../core'
+import { ensureDefaults } from './bootstrap'
 import { renderersFor } from './registry'
 
 export type MjFormMode = 'insert' | 'update' | 'view'
@@ -29,6 +30,8 @@ const spanOf = (c: MjColumn, config: MjGridConfig) => c.span ?? (config.dialogSi
  * Passwords: no magic sentinel. In update mode a password field starts empty
  * and is omitted from the payload unless the user typed a new value.
  */
+ensureDefaults()
+
 export function MjForm({ config, mode, row, onClose }: MjFormProps) {
   const { api, toast } = useMj()
   const { saveOne, deleteOne, isSaving } = useMjSave(config)

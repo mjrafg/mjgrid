@@ -1,13 +1,9 @@
-import { Dialog, DialogContent, DialogTitle, LinearProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel } from '@mui/material'
-import Box from '@mui/material/Box'
+import { Box, Dialog, DialogContent, DialogTitle, LinearProgress, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel } from '@mui/material'
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
 import dayjs from 'dayjs'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { capabilitiesOf, MjApiError, MjValidationError, useMj, useMjQuery, useMjRows, useMjSave, type MjColumn, type MjGridConfig, type MjRow } from '../core'
-import './cells'
-import './editors'
-import './fields'
-import './selectGrid'
+import { ensureDefaults } from './bootstrap'
 import { MjFilterBar } from './FilterBar'
 import { MjForm, type MjFormMode } from './Form'
 import { MjPagination } from './Pagination'
@@ -25,6 +21,8 @@ export interface MjGridProps {
 }
 
 const sortKey = (c: MjColumn) => c.sortField ?? (c.path ? `${c.field}.${c.path}` : c.field)
+
+ensureDefaults()
 
 export function MjGrid({ config, title, actions, onSelect }: MjGridProps) {
   const { toast } = useMj()

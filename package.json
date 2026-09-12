@@ -1,6 +1,6 @@
 {
   "name": "@bluebiz/mjgrid",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Declarative CRUD grid: one column definition drives the grid, filter bar, create/edit form, inline editing and Excel export. Headless core + MUI adapter.",
   "license": "MIT",
   "type": "module",
@@ -37,7 +37,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src test --ext .ts,.tsx",
-    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+    "prepublishOnly": "npm run typecheck && npm test && npm run build && npm run check:esm",
+    "check:esm": "node scripts/check-esm.mjs"
   },
   "peerDependencies": {
     "@mui/material": ">=5.12",

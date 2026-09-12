@@ -1,6 +1,4 @@
-import MuiPagination from '@mui/material/Pagination'
-import Box from '@mui/material/Box'
-import Typography from '@mui/material/Typography'
+import { Box, Pagination as MuiPagination, Typography } from '@mui/material'
 
 export interface MjPaginationProps {
   page: number

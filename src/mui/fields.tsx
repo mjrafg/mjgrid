@@ -1,6 +1,7 @@
 import { FormControl, FormControlLabel, FormLabel, MenuItem, Radio, RadioGroup, TextField } from '@mui/material'
 import { useMjOptions } from '../core'
-import { registerType, renderersFor, type FieldProps } from './registry'
+import type { FieldProps, TypeRenderers } from './registry'
+import type { MjColumnType } from '../core'
 
 const label = (c: FieldProps['column']) => c.headerName
 
@@ -69,11 +70,6 @@ export function BooleanField({ column, value, onChange, error, disabled }: Field
   )
 }
 
-const add = (type: Parameters<typeof registerType>[0], Field: unknown) =>
-  registerType(type, { ...renderersFor({ type, field: '', headerName: '' } as never), Field: Field as never })
-
-add('string', StringField)
-add('number', NumberField)
-add('select', SelectField)
-add('date', DateField)
-add('boolean', BooleanField)
+export const defaultFields: Partial<Record<MjColumnType, Partial<TypeRenderers>>> = Object.fromEntries(
+  Object.entries({ string: StringField, number: NumberField, select: SelectField, date: DateField, boolean: BooleanField }).map(([t, C]) => [t, { Field: C as never }])
+)

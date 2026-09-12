@@ -1,6 +1,7 @@
 import { Checkbox, MenuItem, Select, TextField } from '@mui/material'
 import { useMjOptions } from '../core'
-import { registerType, renderersFor, type EditorProps } from './registry'
+import type { EditorProps, TypeRenderers } from './registry'
+import type { MjColumnType } from '../core'
 
 /**
  * Inline cell editors. Controlled by the row reducer: `value` in, onChange out
@@ -42,11 +43,6 @@ export function BooleanEditor({ value, onChange, disabled }: EditorProps<'boolea
   return <Checkbox size="small" checked={Boolean(value)} disabled={disabled} onChange={e => onChange(e.target.checked)} onClick={e => e.stopPropagation()} />
 }
 
-const add = (type: Parameters<typeof registerType>[0], Editor: unknown) =>
-  registerType(type, { ...renderersFor({ type, field: '', headerName: '' } as never), Editor: Editor as never })
-
-add('string', StringEditor)
-add('number', NumberEditor)
-add('select', SelectEditor)
-add('date', DateEditor)
-add('boolean', BooleanEditor)
+export const defaultEditors: Partial<Record<MjColumnType, Partial<TypeRenderers>>> = Object.fromEntries(
+  Object.entries({ string: StringEditor, number: NumberEditor, select: SelectEditor, date: DateEditor, boolean: BooleanEditor }).map(([t, C]) => [t, { Editor: C as never }])
+)

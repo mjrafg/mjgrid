@@ -1,5 +1,6 @@
 export { MjProvider, useMj } from '../core'
 export * from './registry'
+export * from './bootstrap'
 export * from './value'
 export * from './cells'
 export * from './editors'

@@ -1,7 +1,7 @@
 import { Dialog, DialogContent, DialogTitle, IconButton, InputAdornment, TextField } from '@mui/material'
 import { useState } from 'react'
 import type { ColumnOf, MjRow } from '../core'
-import { getGridComponent, registerType, renderersFor, type EditorProps, type FieldProps } from './registry'
+import { getGridComponent, type EditorProps, type FieldProps, type TypeRenderers } from './registry'
 import { displayValue } from './value'
 
 interface PickerProps {
@@ -68,4 +68,4 @@ function SelectGridField({ column, value, onChange, error, disabled, getValues, 
     }} />
 }
 
-registerType('selectGrid', { ...renderersFor({ type: 'selectGrid', field: '', headerName: '' } as never), Editor: SelectGridEditor as never, Field: SelectGridField as never })
+export const selectGridRenderers: Partial<TypeRenderers> = { Editor: SelectGridEditor as never, Field: SelectGridField as never }

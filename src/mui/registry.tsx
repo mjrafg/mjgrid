@@ -39,16 +39,26 @@ export interface TypeRenderers {
   Field?: ComponentType<FieldProps>
 }
 
-const renderers = new Map<MjColumnType, TypeRenderers>()
+const renderers = new Map<MjColumnType, Partial<TypeRenderers>>()
 
-export function registerType<T extends MjColumnType>(type: T, r: TypeRenderers): void {
-  renderers.set(type, r)
+/**
+ * Merges into whatever is already registered for the type, so modules that
+ * contribute a Cell, an Editor or a Field can be evaluated in any order.
+ * (An earlier version looked the entry up at registration time and broke as
+ * soon as the bundler reordered chunks.)
+ */
+export function registerType<T extends MjColumnType>(type: T, r: Partial<TypeRenderers>): void {
+  renderers.set(type, { ...(renderers.get(type) ?? {}), ...r })
+}
+
+export function registerMany(map: Partial<Record<MjColumnType, Partial<TypeRenderers>>>): void {
+  for (const [type, r] of Object.entries(map) as [MjColumnType, Partial<TypeRenderers>][]) registerType(type, r)
 }
 
 export function renderersFor(column: MjColumn): TypeRenderers {
   const r = renderers.get(column.type)
-  if (!r) throw new Error(`no renderer registered for column type "${column.type}"`)
-  return r
+  if (!r?.Cell) throw new Error(`no cell renderer registered for column type "${column.type}"`)
+  return r as TypeRenderers
 }
 
 export const hasEditor = (c: MjColumn) => Boolean(renderers.get(c.type)?.Editor)

@@ -1,8 +1,9 @@
-import { Button, Typography, useTheme } from '@mui/material'
-import Box from '@mui/material/Box'
+import { Box, Button, Typography, useTheme } from '@mui/material'
 import { useState } from 'react'
 import type { ColumnOf, MjRow } from '../core'
-import { registerType, type CellProps } from './registry'
+import type { CellProps } from './registry'
+import type { ComponentType } from 'react'
+import type { MjColumnType } from '../core'
 import { displayValue } from './value'
 
 /** Default read-only cell for every text-like type. */
@@ -78,22 +79,10 @@ function ImageCell({ value }: CellProps<'image'>) {
   return <img alt={f.originalName ?? ''} src={f.thumbnailPath} style={{ height: '100%', maxHeight: 36, objectFit: 'contain' }} />
 }
 
-// --- registration: every column type gets a Cell. Editors/Fields are added by their own modules. ---
-registerType('string', { Cell: TextCell })
-registerType('number', { Cell: NumberCell })
-registerType('select', { Cell: SelectCell as never })
-registerType('date', { Cell: TextCell })
-registerType('time', { Cell: TextCell })
-registerType('timeRange', { Cell: TextCell })
-registerType('weekDays', { Cell: TextCell })
-registerType('boolean', { Cell: BooleanCell as never })
-registerType('image', { Cell: ImageCell as never })
-registerType('file', { Cell: FileCell as never })
-registerType('address', { Cell: TextCell })
-registerType('button', { Cell: ButtonCell as never })
-registerType('selectGrid', { Cell: TextCell })
-registerType('autocomplete', { Cell: TextCell })
-registerType('profile', { Cell: TextCell })
-registerType('custom', { Cell: TextCell })
+export const defaultCells: Record<MjColumnType, ComponentType<CellProps>> = {
+  string: TextCell, number: NumberCell, select: SelectCell as never, date: TextCell, time: TextCell, timeRange: TextCell,
+  weekDays: TextCell, boolean: BooleanCell as never, image: ImageCell as never, file: FileCell as never, address: TextCell,
+  button: ButtonCell as never, selectGrid: TextCell, autocomplete: TextCell, profile: TextCell, custom: TextCell
+}
 
 export type { ColumnOf }
