@@ -11,7 +11,9 @@ Use the package manager the host project already uses. Running `npm install`
 inside a yarn project (or vice versa) makes that tool reconcile the whole
 `node_modules` tree against its own rules and it will remove packages the
 other lockfile put there. Before publishing, install from a tarball:
-`npm pack` then `yarn add file:./bluebiz-mjgrid-0.1.0.tgz`.
+`npm pack` then `yarn add file:./bluebiz-mjgrid-<version>.tgz`. Yarn v1 caches
+`file:` tarballs by name and version, so when iterating on a local build run
+`yarn cache clean @bluebiz/mjgrid` before re-adding (or bump the version).
 
 Peer dependencies: `react >=18`, `react-dom >=18`; the MUI adapter also
 needs `@mui/material >=5.12` with `@emotion/react` and `@emotion/styled`.
