@@ -4,6 +4,7 @@ import { buildServerSideRequest, assertOk, softDeleteHeader, type MjQueryState, 
 import { capabilitiesOf, filterFor } from '../registry'
 import type { MjFilter, MjGridConfig, MjRow, MjSort } from '../types'
 import { mjUrls } from '../url'
+import { applyFilters, applySort, pageOf } from '../localQuery'
 import { useMj } from './context'
 
 export const DEFAULT_PAGE_SIZE = 12
@@ -52,10 +53,9 @@ export function useMjQuery(config: MjGridConfig, opts: UseMjQueryOptions = {}) {
   // client-side mode: page the static rows locally
   const clientPage = useMemo(() => {
     if (isServer) return null
-    const all = (config.rows ?? []) as MjRow[]
-    const start = page * pageSize
-    return { content: all.slice(start, start + pageSize), totalElements: all.length }
-  }, [isServer, config.rows, page, pageSize])
+    const all = applySort(applyFilters((config.rows ?? []) as MjRow[], [...filters, ...(config.defaultFilters ?? [])]), sort)
+    return { content: pageOf(all, page, pageSize), totalElements: all.length }
+  }, [isServer, config.rows, config.defaultFilters, filters, sort, page, pageSize])
 
   const data = isServer ? query.data : clientPage
   const rows = useMemo<MjRow[]>(() => (data?.content ?? []).map(r => ({ ...(r as MjRow), __state: 'none' as const })), [data])
@@ -88,11 +88,11 @@ export function useMjQuery(config: MjGridConfig, opts: UseMjQueryOptions = {}) {
 
   /** All rows matching the current filters/sort, unpaged. */
   const fetchAll = useCallback(async (): Promise<MjRow[]> => {
-    if (!isServer) return (config.rows ?? []) as MjRow[]
+    if (!isServer) return applySort(applyFilters((config.rows ?? []) as MjRow[], filters), sort)
     const url = mjUrls.fetch(config)
     const env = await api.post<MjServerSidePage>(url, buildServerSideRequest(config, state, { all: true }), softDeleteHeader(config))
     return assertOk(env, url).content as MjRow[]
-  }, [api, config, state, isServer])
+  }, [api, config, state, isServer, filters, sort])
 
   const exportExcel = useCallback(async (example = false): Promise<Blob> => {
     const url = mjUrls.fetch(config)

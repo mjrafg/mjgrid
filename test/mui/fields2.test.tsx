@@ -91,6 +91,6 @@ describe('labels', () => {
     expect(await screen.findByText('No')).toBeInTheDocument()
     expect(screen.getByText('Export Excel')).toBeInTheDocument()
     expect(screen.getByText('Save')).toBeInTheDocument()
-    expect(screen.getByText('Thing Add')).toBeInTheDocument()
+    expect(screen.getByText('Add Thing')).toBeInTheDocument()
   })
 })

@@ -100,3 +100,20 @@ describe('useMjQuery', () => {
     await waitFor(() => expect(f.count('POST', '/api/products')).toBe(2))
   })
 })
+
+describe('client-side mode: search, filters and sort are applied locally', () => {
+  it('setSearch filters static rows and setSort orders them, with no requests', async () => {
+    const f = fakeApi()
+    const rows = [{ id: 'a', code: 'X1', name: 'apple', qty: 3 }, { id: 'b', code: 'X2', name: 'banana', qty: 1 }, { id: 'c', code: 'X3', name: 'apricot', qty: 2 }]
+    const { result } = renderHook(() => useMjQuery({ name: 'L', columns: config.columns, rows, pageSize: 10 }), { wrapper: makeWrapper(f.api) })
+    act(() => result.current.setSearch('ap'))
+    expect(result.current.rows.map(r => r.id)).toEqual(['a', 'c'])
+    expect(result.current.total).toBe(2)
+    act(() => result.current.setSort({ field: 'qty', direction: 'desc' }))
+    expect(result.current.rows.map(r => r.id)).toEqual(['a', 'c'])
+    act(() => result.current.setSearch(''))
+    act(() => result.current.setSort({ field: 'qty', direction: 'asc' }))
+    expect(result.current.rows.map(r => r.id)).toEqual(['b', 'c', 'a'])
+    expect(f.calls).toHaveLength(0)
+  })
+})

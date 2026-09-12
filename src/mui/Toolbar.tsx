@@ -59,7 +59,7 @@ export function MjToolbar(p: MjToolbarProps) {
         )}
         {config.excelExport && <Button variant="outlined" disabled={busy === 'export'} onClick={run('export', () => p.onExcelExport?.() ?? Promise.resolve())}>{L.excelExport}</Button>}
         {config.printable && <Button variant="contained" color="success" disabled={busy === 'print'} onClick={run('print', p.onPrint)}>{L.print}</Button>}
-        {(config.addable ?? true) && p.onAdd && <Button variant="contained" onClick={p.onAdd}>{config.addButtonText ?? `${config.name}${L.addSuffix ? L.addSuffix : ' ' + L.add}`}</Button>}
+        {(config.addable ?? true) && p.onAdd && <Button variant="contained" onClick={p.onAdd}>{config.addButtonText ?? L.addTitle(config.name)}</Button>}
         {inline && (
           <>
             <Button variant="contained" color="success" disabled={busy === 'save'} onClick={run('save', p.onSave)}>{L.save}</Button>

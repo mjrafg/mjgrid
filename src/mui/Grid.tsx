@@ -79,6 +79,7 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
         const err = edit.errorFor(row.original.id, c.field)?.message
         return <E column={c as never} row={row.original} value={value} error={err} onChange={(v, patch) => edit.setCell(row.original.id, c.field, v, patch)} />
       }
+      if (c.renderCell) return <>{c.renderCell({ value, row: row.original, column: c }) as ReactNode}</>
       const C = r.Cell
       return <C column={c as never} row={row.original} value={value} />
     }

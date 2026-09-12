@@ -1,7 +1,7 @@
 /** UI strings. Korean defaults keep parity with the legacy grid; pass `labels` to MjProvider to override. */
 export interface MjLabels {
   search: string; searchPlaceholder: string; clear: string; all: string
-  add: string; addSuffix: string; save: string; delete: string; cancel: string; ok: string; confirm: string
+  add: string; addTitle: (name: string) => string; save: string; delete: string; cancel: string; ok: string; confirm: string
   edit: string; view: string; register: string; update: string
   excelExport: string; excelImport: string; excelTemplate: string; print: string
   noData: string; noChanges: string
@@ -22,7 +22,7 @@ export interface MjLabels {
 
 export const koLabels: MjLabels = {
   search: '검색', searchPlaceholder: '검색어 입력..', clear: '초기화', all: '전체',
-  add: '등록', addSuffix: '등록', save: '저장', delete: '삭제', cancel: '취소', ok: 'OK', confirm: '확인',
+  add: '등록', addTitle: n => `${n}등록`, save: '저장', delete: '삭제', cancel: '취소', ok: 'OK', confirm: '확인',
   edit: '수정', view: '조회', register: '등록', update: '수정',
   excelExport: '엑셀다운로드', excelImport: '엑셀업로드', excelTemplate: '양식다운로드', print: '인쇄',
   noData: '데이터가 없습니다.', noChanges: '변경된 내용이 없습니다.',
@@ -44,7 +44,7 @@ export const koLabels: MjLabels = {
 
 export const enLabels: MjLabels = {
   search: 'Search', searchPlaceholder: 'Search...', clear: 'Clear', all: 'All',
-  add: 'Add', addSuffix: '', save: 'Save', delete: 'Delete', cancel: 'Cancel', ok: 'OK', confirm: 'Confirm',
+  add: 'Add', addTitle: n => `Add ${n}`, save: 'Save', delete: 'Delete', cancel: 'Cancel', ok: 'OK', confirm: 'Confirm',
   edit: 'Edit', view: 'View', register: 'Create', update: 'Update',
   excelExport: 'Export Excel', excelImport: 'Import Excel', excelTemplate: 'Template', print: 'Print',
   noData: 'No data.', noChanges: 'Nothing to save.',
