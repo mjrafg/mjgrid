@@ -1,19 +1,48 @@
-import { FormControl, FormControlLabel, FormLabel, MenuItem, Radio, RadioGroup, TextField } from '@mui/material'
-import { useMj, useMjOptions } from '../core'
+import { Box, Button, FormControl, FormControlLabel, FormLabel, MenuItem, Radio, RadioGroup, TextField } from '@mui/material'
+import { useState } from 'react'
+import { applyMask, fillUrlTemplate, interpolate, useMj, useMjOptions } from '../core'
 import type { FieldProps, TypeRenderers } from './registry'
 import type { MjColumnType } from '../core'
 
 const label = (c: FieldProps['column']) => c.headerName
 
 /** Dialog-form fields. Fully controlled by react-hook-form via value/onChange. */
-export function StringField({ column, value, onChange, error, disabled }: FieldProps<'string'>) {
+export function StringField({ column, value, onChange, error, disabled, getValues }: FieldProps<'string'>) {
   const p = column.params
-  return (
+  const { api, labels, messages } = useMj()
+  const [checking, setChecking] = useState(false)
+  const [checkMsg, setCheckMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const hasCheck = Boolean(p?.valueCheckUrl || p?.valueCheck)
+  const runCheck = async () => {
+    const v = String(value ?? '')
+    if (!v) return
+    setChecking(true); setCheckMsg(null)
+    try {
+      const data = getValues()
+      const original = (data as { __original?: Record<string, unknown> }).__original?.[column.field] ?? ''
+      if (p?.valueCheck) await p.valueCheck(v, data)
+      if (p?.valueCheckUrl) {
+        const url = fillUrlTemplate(p.valueCheckUrl, { ...data, value: v, [column.field]: original })
+        const env = await api.get<unknown>(url)
+        const taken = env.status === 200 && Boolean(env.data)
+        setCheckMsg(taken ? { ok: false, text: interpolate(messages.duplicate, { label: column.headerName, value: v }) } : { ok: true, text: interpolate(messages.notDuplicate, { label: column.headerName, value: v }) })
+      }
+    } finally { setChecking(false) }
+  }
+  const field = (
     <TextField fullWidth size="small" label={label(column)} value={(value as string) ?? ''} disabled={disabled}
-      required={column.rules?.some(r => r.required)} error={Boolean(error)} helperText={error}
+      required={column.rules?.some(r => r.required)} error={Boolean(error) || checkMsg?.ok === false}
+      helperText={error ?? checkMsg?.text} FormHelperTextProps={checkMsg?.ok ? { sx: { color: 'success.main' } } : undefined}
       type={p?.inputType === 'password' ? 'password' : 'text'} multiline={p?.multiline} minRows={p?.rows}
       placeholder={p?.placeholder} autoComplete={p?.autoComplete}
-      onChange={e => onChange(e.target.value)} />
+      onChange={e => { setCheckMsg(null); onChange(p?.mask ? applyMask(p.mask, e.target.value) : e.target.value) }} />
+  )
+  if (!hasCheck || disabled) return field
+  return (
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+      {field}
+      <Button variant="contained" color="secondary" onClick={runCheck} disabled={checking || !value} sx={{ whiteSpace: 'nowrap', mt: 0.25 }}>{p?.valueCheckText ?? labels.check}</Button>
+    </Box>
   )
 }
 

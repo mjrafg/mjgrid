@@ -8,7 +8,7 @@ export interface MjLabels {
   saved: string; inserted: string; updated: string; deleted: string
   confirmDeleteTitle: string; confirmDeleteBody: string
   selectTitle: (name: string) => string
-  pick: string; clearValue: string
+  pick: string; clearValue: string; check: string
   positive: string; negative: string
   uploadHint: string; uploadAccept: (formats: string) => string; uploadTooLarge: (max: string) => string; uploadBadType: string
   fileRegister: string; download: string; remove: string
@@ -29,7 +29,7 @@ export const koLabels: MjLabels = {
   saved: '저장 되었습니다.', inserted: '등록 되었습니다.', updated: '수정 되었습니다.', deleted: '삭제 되었습니다.',
   confirmDeleteTitle: '삭제', confirmDeleteBody: '삭제하시겠습니까?',
   selectTitle: n => `${n} 선택`,
-  pick: '선택', clearValue: '지우기',
+  pick: '선택', clearValue: '지우기', check: '중복확인',
   positive: '사용', negative: '미사용',
   uploadHint: '여기에 파일을 놓거나 클릭하여 업로드하세요.', uploadAccept: f => `허용 파일 확장자 [${f}]`,
   uploadTooLarge: m => `최대 ${m}까지 업로드할 수 있습니다.`, uploadBadType: '올바른 파일 확장자를 사용하여 업로드해 주십시오.',
@@ -51,7 +51,7 @@ export const enLabels: MjLabels = {
   saved: 'Saved.', inserted: 'Created.', updated: 'Updated.', deleted: 'Deleted.',
   confirmDeleteTitle: 'Delete', confirmDeleteBody: 'Delete this record?',
   selectTitle: n => `Select ${n}`,
-  pick: 'Pick', clearValue: 'Clear value',
+  pick: 'Pick', clearValue: 'Clear value', check: 'Check',
   positive: 'Yes', negative: 'No',
   uploadHint: 'Drop a file here or click to upload.', uploadAccept: f => `Allowed: ${f}`,
   uploadTooLarge: m => `Maximum size is ${m}.`, uploadBadType: 'File type not allowed.',

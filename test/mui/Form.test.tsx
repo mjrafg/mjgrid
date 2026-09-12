@@ -94,3 +94,19 @@ describe('MjForm', () => {
     expect(t.ok).toEqual(['삭제 되었습니다.'])
   })
 })
+
+describe('duplicate-check button', () => {
+  it('shows the button for valueCheckUrl fields, reports taken / available inline, excludes the edited row', async () => {
+    const f = fakeApi()
+    f.on('GET', '/api/users/check/', c => ({ status: 200, data: c.url.includes('/check/taken/') }))
+    render(<MjForm config={config} mode="update" row={{ id: 'u1', userName: 'bob' }} onClose={() => {}} />, { wrapper: makeWrapper(f.api) })
+    const btn = screen.getByRole('button', { name: '중복확인' })
+    fireEvent.change(screen.getByLabelText(/아이디/), { target: { value: 'taken' } })
+    fireEvent.click(btn)
+    expect(await screen.findByText('taken은(는) 중복된 아이디입니다.')).toBeInTheDocument()
+    expect(f.calls.at(-1)!.url).toBe('/api/users/check/taken/bob')
+    fireEvent.change(screen.getByLabelText(/아이디/), { target: { value: 'free' } })
+    fireEvent.click(btn)
+    expect(await screen.findByText('free은(는) 사용 가능한 아이디입니다.')).toBeInTheDocument()
+  })
+})

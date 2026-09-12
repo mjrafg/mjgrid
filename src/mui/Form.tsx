@@ -43,7 +43,9 @@ export function MjForm({ config, mode, row, onClose }: MjFormProps) {
   for (const f of passwordFields) defaults[f] = ''
   for (const c of columns) if (defaults[c.field] === undefined && c.defaultValue !== undefined) defaults[c.field] = c.defaultValue
 
-  const { control, handleSubmit, setError, clearErrors, getValues, setValue, formState: { errors } } = useForm({ defaultValues: defaults })
+  const { control, handleSubmit, setError, clearErrors, getValues: rhfGetValues, setValue, formState: { errors } } = useForm({ defaultValues: defaults })
+  // fields receive the original row under __original so duplicate checks can exclude the row being edited
+  const getValues = () => ({ ...rhfGetValues(), __original: row ?? {} })
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const validateAll = async (data: Record<string, unknown>): Promise<boolean> => {
