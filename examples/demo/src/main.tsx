@@ -2,13 +2,13 @@ import { CssBaseline, FormControlLabel, Switch, Tab, Tabs, Box, Typography } fro
 import { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import toast, { Toaster } from 'react-hot-toast'
-import { MjGrid, MjProvider, enLabels } from '@bluebiz/mjgrid'
+import { MjGrid, MjProvider, buildTemplateWorkbook, enLabels } from '@bluebiz/mjgrid'
 import { apiLog, memoryApi, subscribeLog, type ApiLogEntry } from './memoryApi'
 import { ErrorDemo, StaticPage, inventoryConfig, productsConfig, shiftsConfig } from './pages'
 
 function ApiLog() {
-  const [log, setLog] = useState<ApiLogEntry[]>(apiLog)
-  useEffect(() => subscribeLog(setLog), [])
+  const [log, setLog] = useState<ApiLogEntry[]>(() => [...apiLog])
+  useEffect(() => { setLog([...apiLog]); return subscribeLog(setLog) }, [])
   const counts = log.reduce<Record<string, number>>((m, e) => { const k = `${e.method} ${e.url.replace(/\?.*$/, '')}`; m[k] = (m[k] ?? 0) + 1; return m }, {})
   return (
     <Box sx={{ p: 1, borderLeft: '1px solid #ddd', minWidth: 300, fontSize: 12, fontFamily: 'monospace', overflow: 'auto' }} data-testid="api-log">
@@ -44,4 +44,6 @@ function App() {
     </MjProvider>
   )
 }
+// test hook: lets the browser harness build a real .xlsx from the product columns
+;(window as unknown as { __mjTemplate: () => ArrayBuffer }).__mjTemplate = () => buildTemplateWorkbook(productsConfig.columns)
 createRoot(document.getElementById('root')!).render(<App />)
