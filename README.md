@@ -12,8 +12,9 @@ inside a yarn project (or vice versa) makes that tool reconcile the whole
 `node_modules` tree against its own rules and it will remove packages the
 other lockfile put there. Before publishing, install from a tarball:
 `npm pack` then `yarn add file:./bluebiz-mjgrid-<version>.tgz`. Yarn v1 caches
-`file:` tarballs by name and version, so when iterating on a local build run
-`yarn cache clean @bluebiz/mjgrid` before re-adding (or bump the version).
+`file:` tarballs under `npm-<name>-<version>-<hash>` and will reinstall the cached
+copy for the same version even after `yarn cache clean <pkg>`. When iterating on
+a local build, bump the version for every tarball you install.
 
 Peer dependencies: `react >=18`, `react-dom >=18`; the MUI adapter also
 needs `@mui/material >=5.12` with `@emotion/react` and `@emotion/styled`.
