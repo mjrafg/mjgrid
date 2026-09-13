@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+
+- **TanStack Table v9** (`useTable` + `tableFeatures({})`, own column sizing/sortability; paging, sorting and filtering stay server-side / in `core/localQuery`). No API change for consumers.
+- `zod` dependency removed (it was declared but never used).
+- Toolchain: ESLint 10 (flat config), typescript-eslint 8.70, Vitest 5 / Vite 8, jsdom 30, tsup 8.5, jest-dom 7, msw 2.15; TypeScript stays on 5.9 (typescript-eslint and tsup do not support TS 7 yet). Development and CI run on **Node 24** (`engines.node >= 20.19` for `require(esm)`, needed by jsdom 30 / Vite 8; consumers only need what their bundler needs).
+
 ## 1.3.0
 
 - **MUI 5.12 → 9 and React 18 → 19 supported** (peers `@mui/material >=5.12 <10`, `react >=18 <20`). MUI 9 removed `inputProps` / `InputProps` / `InputLabelProps` / `FormHelperTextProps` / `SelectProps` / `PaperProps` and changed `Grid`; MUI 5 lacks `slotProps`. `compat.ts` (`tfSlots`, `drawerPaper`, `muiMajor`) spells the props for the installed version; the form layout is a plain CSS grid.

@@ -211,6 +211,8 @@ ref.current.openInsert(defaults?) · openEdit(row) · openView(row)
 
 `@agent24/mjgrid/core` has no UI dependency: types, `buildServerSideRequest`, `validateField/validateRows`, `filterFor`, `parseExcelRows` / `buildTemplateWorkbook` / `exportRowsToXlsx`, `applyFilters/applySort`, and the hooks `useMjQuery`, `useMjRows`, `useMjSave`, `useMjOptions`, `useMjUpload`. Another UI adapter registers renderers with `registerType(type, { Cell, Editor, Field })`.
 
+**Stack (dev):** TanStack Table 9 · TanStack Query 5 · react-hook-form 7 · dayjs · SheetJS · MUI 9 / React 19 (tests also run on MUI 5.12 / React 18) · TypeScript 5.9 · Vitest 5 · ESLint 10 · Node 24.
+
 ## Design rules (enforced)
 
 1. One column-type registry; capabilities in `core/registry.ts`, renderers merged in any order.

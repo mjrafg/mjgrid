@@ -3,7 +3,7 @@
 set -u
 fail() { echo "GATE FAILED: $1"; exit 1; }
 npx tsc --noEmit || fail typecheck
-npx eslint src test --ext .ts,.tsx || fail lint
+npx eslint src test || fail lint
 npx vitest run > /tmp/mjgrid-vitest.log 2>&1; code=$?
 grep -E "Test Files|Tests |✗|×|FAIL " /tmp/mjgrid-vitest.log
 [ $code -eq 0 ] || fail tests

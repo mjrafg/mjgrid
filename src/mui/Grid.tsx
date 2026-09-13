@@ -1,5 +1,5 @@
 import { Box, IconButton, LinearProgress, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, TableSortLabel } from '@mui/material'
-import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
+import { flexRender, tableFeatures, useTable, type ColumnDef } from '@tanstack/react-table'
 import dayjs from 'dayjs'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState, type ReactNode } from 'react'
 import { capabilitiesOf, MjApiError, MjValidationError, useMj, useMjQuery, useMjRows, useMjSave, type MjColumn, type MjFilter, type MjGridConfig, type MjRow } from '../core'
@@ -41,6 +41,9 @@ export interface MjGridHandle {
 }
 
 const sortKey = (c: MjColumn) => c.sortField ?? (c.path ? `${c.field}.${c.path}` : c.field)
+const canSort = (c: MjColumn) => c.sortable !== false && c.type !== 'button'
+// paging, sorting and filtering are server-side (or in core/localQuery), so the table needs no feature beyond the core row model
+const features = tableFeatures({})
 
 ensureDefaults()
 
@@ -83,17 +86,16 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
     return <C column={c as never} row={row} value={value} />
   }, [isEditing, edit])
 
-  const tableColumns = useMemo<ColumnDef<MjRow>[]>(() => visibleColumns.map(c => ({
+  const widthOf = (c: MjColumn) => c.width ?? capabilitiesOf(c).width
+  const tableColumns = useMemo<ColumnDef<typeof features, MjRow, unknown>[]>(() => visibleColumns.map(c => ({
     id: c.field,
     header: c.headerName,
-    size: c.width ?? capabilitiesOf(c).width,
-    enableSorting: c.sortable !== false && c.type !== 'button',
-    accessorFn: row => readCell(c, row),
+    accessorFn: (row: MjRow) => readCell(c, row),
     cell: ({ row, getValue }) => renderCell(c, row.original, getValue())
   })), [visibleColumns, renderCell])
 
-  const actionColumn = useMemo<ColumnDef<MjRow>[]>(() => rowActions ? [{
-    id: '__actions', header: '+ / -', size: 90, enableSorting: false,
+  const actionColumn = useMemo<ColumnDef<typeof features, MjRow, unknown>[]>(() => rowActions ? [{
+    id: '__actions', header: '+ / -',
     cell: ({ row }) => (
       <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }} onClick={e => e.stopPropagation()}>
         <IconButton size="small" aria-label={L.rowAdd} onClick={() => edit.addRow(undefined, edit.rows.findIndex(r => r.id === row.original.id) + 1)}>＋</IconButton>
@@ -102,10 +104,11 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
     )
   }] : [], [rowActions, edit, L])
 
-  const table = useReactTable({ data: rows, columns: [...tableColumns, ...actionColumn], getCoreRowModel: getCoreRowModel(), manualPagination: true, manualSorting: true, manualFiltering: true, getRowId: r => r.id })
+  const allColumns = useMemo(() => [...tableColumns, ...actionColumn], [tableColumns, actionColumn])
+  const table = useTable({ features, data: rows, columns: allColumns, getRowId: (r: MjRow) => r.id })
 
   const onHeaderSort = (c: MjColumn) => {
-    if (c.sortable === false || c.type === 'button') return
+    if (!canSort(c)) return
     const key = sortKey(c)
     q.setSort(q.sort.field === key ? { field: key, direction: q.sort.direction === 'asc' ? 'desc' : 'asc' } : { field: key, direction: 'asc' })
   }
@@ -219,11 +222,11 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
               <TableRow key={hg.id}>
                 {hg.headers.map(h => {
                   const c = visibleColumns.find(x => x.field === h.column.id)
-                  if (!c) return <TableCell key={h.id} style={{ width: h.getSize(), textAlign: 'center' }}>{flexRender(h.column.columnDef.header, h.getContext())}</TableCell>
+                  if (!c) return <TableCell key={h.id} style={{ width: 90, textAlign: 'center' }}>{flexRender(h.column.columnDef.header, h.getContext())}</TableCell>
                   const active = q.sort.field === sortKey(c)
                   return (
-                    <TableCell key={h.id} style={{ width: h.getSize(), textAlign: capabilitiesOf(c).align }} sortDirection={active ? q.sort.direction : false}>
-                      {h.column.getCanSort()
+                    <TableCell key={h.id} style={{ width: widthOf(c), textAlign: capabilitiesOf(c).align }} sortDirection={active ? q.sort.direction : false}>
+                      {canSort(c)
                         ? <TableSortLabel active={active} direction={active ? q.sort.direction : 'asc'} onClick={() => onHeaderSort(c)}>{flexRender(h.column.columnDef.header, h.getContext())}</TableSortLabel>
                         : flexRender(h.column.columnDef.header, h.getContext())}
                     </TableCell>
@@ -236,7 +239,7 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
             {table.getRowModel().rows.map(r => (
               <TableRow key={r.id} hover selected={r.id === selected} onClick={() => onRowClick(r.original)}
                 sx={{ cursor: mode === 'readonly' && !config.hooks?.onRowClick ? 'default' : 'pointer', height: config.rowHeight ?? 40 }}>
-                {r.getVisibleCells().map(cell => (
+                {r.getAllCells().map(cell => (
                   <TableCell key={cell.id} sx={{ py: 0.5 }}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                 ))}
               </TableRow>
