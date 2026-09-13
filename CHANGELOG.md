@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+- Mobile form: the 취소/삭제/등록 buttons render in the sheet's fixed footer (portal + `form` attribute) instead of a sticky row inside the scroll area, which overlapped the last field on real phones.
+
 ## 1.1.0
 
 Mobile support.

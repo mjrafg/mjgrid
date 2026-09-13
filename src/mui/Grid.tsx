@@ -56,6 +56,8 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
   const [selected, setSelected] = useState<string | null>(null)
   const [dialog, setDialog] = useState<{ mode: MjFormMode; row?: Partial<MjRow> } | null>(null)
   const [importFile, setImportFile] = useState<File | null>(null)
+  // mobile: the form's buttons live in the sheet's fixed footer, outside the scroll area
+  const [formActionsEl, setFormActionsEl] = useState<HTMLDivElement | null>(null)
 
   // inline mode edits a client copy of the current page; reload it whenever the server rows change
   useEffect(() => { if (inline) edit.load(q.rows) }, [inline, q.rows, edit.load]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -260,8 +262,9 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
 
       {config.excelImport && <ExcelImportDialog config={config} file={importFile} onClose={() => setImportFile(null)} mobile={mobile} />}
       <MjSheet open={dialog !== null} onClose={closeDialog} size={config.dialogSize ?? 'sm'} mobile={mobile}
-        title={<>{config.name} {dialog?.mode === 'insert' ? L.register : dialog?.mode === 'view' ? L.view : L.edit}</>}>
-        {dialog && <MjForm config={config} mode={dialog.mode} row={dialog.row} onClose={closeDialog} mobile={mobile} />}
+        title={<>{config.name} {dialog?.mode === 'insert' ? L.register : dialog?.mode === 'view' ? L.view : L.edit}</>}
+        actions={mobile.active ? <Box ref={setFormActionsEl} sx={{ display: 'flex', gap: 1, '& .MuiButton-root': { flex: 1 } }} data-testid="mj-form-actions" /> : undefined}>
+        {dialog && <MjForm config={config} mode={dialog.mode} row={dialog.row} onClose={closeDialog} mobile={mobile} actionsContainer={mobile.active ? formActionsEl : undefined} />}
       </MjSheet>
     </Box>
   )

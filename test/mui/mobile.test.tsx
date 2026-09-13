@@ -135,7 +135,11 @@ describe('MjGrid mobile layout', () => {
     render(<MjGrid config={config} />, { wrapper: makeWrapper(f.api) })
     fireEvent.click(await screen.findByTestId('mj-card'))
     const form = await screen.findByTestId('mj-form')
-    fireEvent.click(within(form).getByRole('button', { name: '삭제' }))
+    // the buttons sit in the sheet's fixed footer, outside the <form> element, and still target it
+    expect(within(form).queryByRole('button', { name: '삭제' })).not.toBeInTheDocument()
+    const footer = screen.getByTestId('mj-form-actions')
+    expect(within(footer).getByRole('button', { name: '수정' })).toHaveAttribute('form', form.id)
+    fireEvent.click(within(footer).getByRole('button', { name: '삭제' }))
     await screen.findByTestId('mj-confirm-delete')
     window.history.back()
     await waitFor(() => expect(screen.queryByTestId('mj-confirm-delete')).not.toBeInTheDocument())

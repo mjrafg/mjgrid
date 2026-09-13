@@ -1,5 +1,6 @@
 import { Box, Button, Grid, Typography } from '@mui/material'
-import { useState } from 'react'
+import { useId, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Controller, useForm } from 'react-hook-form'
 import { fillUrlTemplate, MjApiError, MjValidationError, useMj, useMjSave, useMjUpload, validateField, duplicateMessage, type MjColumn, type MjGridConfig, type MjRow } from '../core'
 import { resolvePendingUploads } from './files'
@@ -15,6 +16,8 @@ export interface MjFormProps {
   row?: Partial<MjRow>
   onClose: (changed: boolean) => void
   mobile?: MjMobileState
+  /** mobile: render the action buttons into this element (the sheet's fixed footer) instead of inline; the submit button targets the form by id */
+  actionsContainer?: HTMLElement | null
 }
 
 export function formColumns(config: MjGridConfig, mode: MjFormMode): MjColumn[] {
@@ -36,8 +39,9 @@ const desktopMobile: MjMobileState = { active: false, layout: 'cards', cardField
  */
 ensureDefaults()
 
-export function MjForm({ config, mode, row, onClose, mobile = desktopMobile }: MjFormProps) {
+export function MjForm({ config, mode, row, onClose, mobile = desktopMobile, actionsContainer }: MjFormProps) {
   const { api, toast, labels: L } = useMj()
+  const formId = useId()
   const { saveOne, deleteOne, isSaving } = useMjSave(config)
   const { upload } = useMjUpload()
   const columns = formColumns(config, mode)
@@ -99,8 +103,16 @@ export function MjForm({ config, mode, row, onClose, mobile = desktopMobile }: M
     }
   }
 
+  const buttons = (
+    <>
+      <Button variant="contained" color="error" onClick={() => onClose(false)}>{L.cancel}</Button>
+      {mode === 'update' && (config.deletable ?? true) && <Button variant="outlined" color="error" onClick={() => setConfirmDelete(true)} disabled={isSaving}>{L.delete}</Button>}
+      {mode !== 'view' && <Button type="submit" form={formId} variant="contained" disabled={isSaving}>{mode === 'insert' ? config.addButtonText ?? L.register : L.update}</Button>}
+    </>
+  )
+
   return (
-    <form noValidate onSubmit={submit} data-testid="mj-form">
+    <form id={formId} noValidate onSubmit={submit} data-testid="mj-form">
       <Grid container spacing={2}>
         {columns.map(c => {
           const { Field } = renderersFor(c)
@@ -114,14 +126,9 @@ export function MjForm({ config, mode, row, onClose, mobile = desktopMobile }: M
             </Grid>
           )
         })}
-        <Grid item xs={12} sx={mobile.active
-          // sticky inside the sheet's scroll area: the buttons stay reachable above the keyboard without a second scroll container
-          ? { position: 'sticky', bottom: -16, mx: -2, px: 2, py: 1.5, bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider', display: 'flex', gap: 1, '& .MuiButton-root': { flex: 1 } }
-          : { display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-          <Button variant="contained" color="error" onClick={() => onClose(false)}>{L.cancel}</Button>
-          {mode === 'update' && (config.deletable ?? true) && <Button variant="outlined" color="error" onClick={() => setConfirmDelete(true)} disabled={isSaving}>{L.delete}</Button>}
-          {mode !== 'view' && <Button type="submit" variant="contained" disabled={isSaving}>{mode === 'insert' ? config.addButtonText ?? L.register : L.update}</Button>}
-        </Grid>
+        {actionsContainer
+          ? createPortal(buttons, actionsContainer)
+          : <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, '& .MuiButton-root': mobile.active ? { flex: 1 } : undefined }}>{buttons}</Grid>}
       </Grid>
       <MjSheet open={confirmDelete} onClose={() => setConfirmDelete(false)} title={L.confirmDeleteTitle} mobile={mobile} size="xs" data-testid="mj-confirm-delete"
         actions={
