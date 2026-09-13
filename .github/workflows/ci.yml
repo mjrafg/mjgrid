@@ -6,6 +6,7 @@ on:
   pull_request:
 jobs:
   gate:
+    name: gate (MUI 9 / React 19)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,3 +17,21 @@ jobs:
       - run: npm ci
       - run: sh scripts/gate.sh
       - run: npm pack --dry-run
+  matrix:
+    name: tests (MUI ${{ matrix.mui }} / React ${{ matrix.react }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { mui: 5.12.2, react: 18.2.0 }
+          - { mui: 5.18.0, react: 18.3.1 }
+          - { mui: 7.3.11, react: 19.3.0 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: sh scripts/test-matrix.sh ${{ matrix.mui }} ${{ matrix.react }}

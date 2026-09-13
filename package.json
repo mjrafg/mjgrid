@@ -1,6 +1,6 @@
 {
   "name": "@agent24/mjgrid",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Declarative CRUD grid: one column definition drives the grid, filter bar, create/edit form, inline editing and Excel export. Headless core + MUI adapter.",
   "license": "MIT",
   "author": "mjrafg",
@@ -60,14 +60,15 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src test --ext .ts,.tsx",
     "prepublishOnly": "npm run typecheck && npm test && npm run build && npm run check:esm",
-    "check:esm": "node scripts/check-esm.mjs"
+    "check:esm": "node scripts/check-esm.mjs",
+    "test:matrix": "sh scripts/test-matrix.sh 5.12.2 18.2.0"
   },
   "peerDependencies": {
     "@emotion/react": ">=11",
     "@emotion/styled": ">=11",
-    "@mui/material": ">=5.12",
-    "react": ">=18",
-    "react-dom": ">=18"
+    "@mui/material": ">=5.12 <10",
+    "react": ">=18 <20",
+    "react-dom": ">=18 <20"
   },
   "peerDependenciesMeta": {
     "@mui/material": {
@@ -91,20 +92,20 @@
   "devDependencies": {
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
-    "@mui/material": "^5.16.7",
+    "@mui/material": "^9.4.0",
     "@testing-library/jest-dom": "^6.5.0",
     "@testing-library/react": "^16.0.1",
     "@testing-library/user-event": "^14.5.2",
-    "@types/react": "^18.3.5",
-    "@types/react-dom": "^18.3.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@typescript-eslint/eslint-plugin": "^8.6.0",
     "@typescript-eslint/parser": "^8.6.0",
     "eslint": "^8.57.1",
     "eslint-plugin-react-hooks": "^4.6.2",
     "jsdom": "^25.0.0",
     "msw": "^2.4.9",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
     "tsup": "^8.3.0",
     "typescript": "^5.6.2",
     "vitest": "^2.1.1"

@@ -3,6 +3,7 @@ import { useMjOptions } from '../core'
 import type { EditorProps, TypeRenderers } from './registry'
 import type { MjColumnType } from '../core'
 import { MjDatePicker } from './DatePicker'
+import { tfSlots } from './compat'
 
 /**
  * Inline cell editors. Controlled by the row reducer: `value` in, onChange out
@@ -16,7 +17,7 @@ export function StringEditor({ value, onChange, error, disabled }: EditorProps<'
 
 export function NumberEditor({ value, onChange, error, disabled }: EditorProps<'number'>) {
   return <TextField size="small" fullWidth type="number" value={value === null || value === undefined ? '' : String(value)}
-    error={Boolean(error)} disabled={disabled} inputProps={{ style: { textAlign: 'right' } }}
+    error={Boolean(error)} disabled={disabled} {...tfSlots({ html: { style: { textAlign: 'right' } } })}
     onChange={e => onChange(e.target.value === '' ? null : Number(e.target.value))} onClick={e => e.stopPropagation()} />
 }
 

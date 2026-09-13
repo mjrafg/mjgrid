@@ -5,6 +5,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat.js'
 import { useEffect, useMemo, useState, type MouseEvent } from 'react'
 import { useMj, type MjLabels } from '../core'
 import { MjSheet, useMjMobile } from './mobile'
+import { tfSlots } from './compat'
 
 dayjs.extend(customParseFormat)
 
@@ -61,7 +62,7 @@ export function MjCalendar({ value, selector, onPick, touch }: MjCalendarProps) 
       <IconButton size="small" aria-label={selector === 'date' ? L.prevMonth : L.prevYear} onClick={() => setView(v => (selector === 'date' ? v.subtract(1, 'month') : selector === 'month' ? v.subtract(1, 'year') : v.subtract(10, 'year')))}>‹</IconButton>
       <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', gap: 0.5 }}>
         {selector === 'year'
-          ? <Typography fontWeight={600}>{decadeStart}–{decadeStart + 11}</Typography>
+          ? <Typography sx={{ fontWeight: 600 }}>{decadeStart}–{decadeStart + 11}</Typography>
           : <>
               <select aria-label={L.yearFormat} value={view.year()} style={selectSx} onChange={e => setView(v => v.year(Number(e.target.value)))}>
                 {years.map(y => <option key={y} value={y}>{L.calendarTitle(y, view.month() + 1).replace(L.monthNames[view.month()]!, '').trim() || y}</option>)}
@@ -177,15 +178,17 @@ export function MjDatePicker({ value, onChange, selector = 'date', label, requir
     <>
       <TextField size={size} fullWidth={fullWidth} label={label} required={required} disabled={disabled} error={error} helperText={helperText}
         value={text} placeholder={placeholder ?? fmt} sx={sx} onClick={e => e.stopPropagation()}
-        inputProps={{ 'aria-label': ariaLabel, inputMode: 'numeric' }} InputLabelProps={{ shrink: true }}
         onChange={e => setText(e.target.value)} onBlur={commitText} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitText() } }}
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              <IconButton size="small" edge="end" aria-label={L.openCalendar} aria-haspopup="dialog" disabled={disabled} onClick={openCalendar}>📅</IconButton>
-            </InputAdornment>
-          )
-        }} />
+        {...tfSlots({
+          html: { 'aria-label': ariaLabel, inputMode: 'numeric' }, label: { shrink: true },
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                <IconButton size="small" edge="end" aria-label={L.openCalendar} aria-haspopup="dialog" disabled={disabled} onClick={openCalendar}>📅</IconButton>
+              </InputAdornment>
+            )
+          }
+        })} />
       {mobile.active
         ? <MjSheet open={open} onClose={close} title={label ?? ariaLabel} mobile={mobile} data-testid="mj-date-sheet"><Box sx={{ display: 'flex', justifyContent: 'center' }}>{calendar}</Box></MjSheet>
         : <Popover open={open} anchorEl={anchor} onClose={close} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }} onClick={e => e.stopPropagation()}>{calendar}</Popover>}

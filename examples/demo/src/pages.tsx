@@ -71,7 +71,7 @@ export function StaticPage() {
   return (
     <Stack spacing={1} sx={{ height: '100%' }}>
       <Stack spacing={1} sx={{ px: { xs: 1.5, md: 0 }, pt: { xs: 1.5, md: 0 } }}>
-        <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+        <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap" }}>
           <Button size="small" variant="outlined" onClick={() => ref.current?.openView(rows[0]!)}>ref.openView(row 1)</Button>
           <Button size="small" variant="outlined" onClick={() => ref.current?.setSearch('정적 행 2')}>ref.setSearch</Button>
           <Button size="small" variant="outlined" onClick={() => ref.current?.setSearch('')}>ref.clear</Button>

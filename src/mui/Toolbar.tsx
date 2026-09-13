@@ -2,6 +2,7 @@ import { Box, Button, IconButton, InputAdornment, Menu, MenuItem, TextField } fr
 import { useId, useState, type ReactNode } from 'react'
 import { useMj, type MjGridConfig } from '../core'
 import { touchSx } from './mobile'
+import { tfSlots } from './compat'
 
 export interface MjToolbarProps {
   config: MjGridConfig
@@ -44,11 +45,14 @@ export function MjToolbar(p: MjToolbarProps) {
 
   const search = config.showToolbarSearch && (
     <TextField size="small" value={term} placeholder={L.searchPlaceholder} onChange={e => setTerm(e.target.value)} fullWidth={p.mobile}
-      onKeyDown={e => { if (e.key === 'Enter') p.onSearch(term) }} inputProps={p.mobile ? { enterKeyHint: 'search', inputMode: 'search' } : undefined}
-      InputProps={{
-        startAdornment: <InputAdornment position="start"><IconButton size="small" aria-label={L.clear} onClick={() => { setTerm(''); p.onSearch('') }}>✕</IconButton></InputAdornment>,
-        endAdornment: <InputAdornment position="end"><IconButton size="small" aria-label={L.search} onClick={() => p.onSearch(term)}>🔍</IconButton></InputAdornment>
-      }} />
+      onKeyDown={e => { if (e.key === 'Enter') p.onSearch(term) }}
+      {...tfSlots({
+        html: p.mobile ? { enterKeyHint: 'search', inputMode: 'search' } : undefined,
+        input: {
+          startAdornment: <InputAdornment position="start"><IconButton size="small" aria-label={L.clear} onClick={() => { setTerm(''); p.onSearch('') }}>✕</IconButton></InputAdornment>,
+          endAdornment: <InputAdornment position="end"><IconButton size="small" aria-label={L.search} onClick={() => p.onSearch(term)}>🔍</IconButton></InputAdornment>
+        }
+      })} />
   )
   const excelInput = config.excelImport && <input id={fileInputId} type="file" accept=".xlsx" hidden onChange={e => { const f = e.target.files?.[0]; if (f) p.onExcelImport?.(f); e.target.value = '' }} />
   const addButton = (config.addable ?? true) && p.onAdd && <Button variant="contained" onClick={p.onAdd}>{config.addButtonText ?? L.addTitle(config.name)}</Button>

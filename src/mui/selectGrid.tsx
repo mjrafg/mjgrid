@@ -4,6 +4,7 @@ import { useMj, type ColumnOf, type MjRow } from '../core'
 import { getGridComponent, type EditorProps, type FieldProps, type TypeRenderers } from './registry'
 import { displayValue } from './value'
 import { MjSheet, useMjMobile } from './mobile'
+import { tfSlots } from './compat'
 
 interface PickerProps {
   column: ColumnOf<'selectGrid'>
@@ -39,15 +40,17 @@ export function SelectGridPicker({ column, value, row, onPick, error, disabled, 
     <>
       <TextField size="small" fullWidth value={text} label={label} required={required} error={Boolean(error)} helperText={error}
         disabled={disabled} onClick={() => !disabled && setOpen(true)}
-        inputProps={{ readOnly: true, 'aria-haspopup': 'dialog', style: { cursor: disabled ? 'default' : 'pointer' } }}
-        InputProps={{
-          endAdornment: (
-            <InputAdornment position="end">
-              {text && !disabled && <IconButton size="small" aria-label={labels.clearValue} onClick={e => { e.stopPropagation(); onPick(null) }}>✕</IconButton>}
-              <IconButton size="small" aria-label={labels.pick} disabled={disabled} onClick={e => { e.stopPropagation(); setOpen(true) }}>🔍</IconButton>
-            </InputAdornment>
-          )
-        }} />
+        {...tfSlots({
+          html: { readOnly: true, 'aria-haspopup': 'dialog', style: { cursor: disabled ? 'default' : 'pointer' } },
+          input: {
+            endAdornment: (
+              <InputAdornment position="end">
+                {text && !disabled && <IconButton size="small" aria-label={labels.clearValue} onClick={e => { e.stopPropagation(); onPick(null) }}>✕</IconButton>}
+                <IconButton size="small" aria-label={labels.pick} disabled={disabled} onClick={e => { e.stopPropagation(); setOpen(true) }}>🔍</IconButton>
+              </InputAdornment>
+            )
+          }
+        })} />
       <MjSheet open={open} onClose={() => setOpen(false)} title={title} size={p.grid.dialogSize ?? 'md'} mobile={mobile} data-testid="mj-select-grid">
         <Box sx={{ minHeight: mobile.active ? undefined : 400, height: mobile.active ? '70dvh' : undefined }}>{open && <Grid config={nested} />}</Box>
       </MjSheet>

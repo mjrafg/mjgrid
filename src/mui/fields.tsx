@@ -4,6 +4,7 @@ import { applyMask, fillUrlTemplate, interpolate, useMj, useMjOptions } from '..
 import type { FieldProps, TypeRenderers } from './registry'
 import type { MjColumnType } from '../core'
 import { MjDatePicker } from './DatePicker'
+import { tfSlots } from './compat'
 
 const label = (c: FieldProps['column']) => c.headerName
 
@@ -33,7 +34,7 @@ export function StringField({ column, value, onChange, error, disabled, getValue
   const field = (
     <TextField fullWidth size="small" label={label(column)} value={(value as string) ?? ''} disabled={disabled}
       required={column.rules?.some(r => r.required)} error={Boolean(error) || checkMsg?.ok === false}
-      helperText={error ?? checkMsg?.text} FormHelperTextProps={checkMsg?.ok ? { sx: { color: 'success.main' } } : undefined}
+      helperText={error ?? checkMsg?.text} {...tfSlots({ helper: checkMsg?.ok ? { sx: { color: 'success.main' } } : undefined })}
       type={p?.inputType === 'password' ? 'password' : 'text'} multiline={p?.multiline} minRows={p?.rows}
       placeholder={p?.placeholder} autoComplete={p?.autoComplete}
       onChange={e => { setCheckMsg(null); onChange(p?.mask ? applyMask(p.mask, e.target.value) : e.target.value) }} />

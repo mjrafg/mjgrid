@@ -1,6 +1,7 @@
 import { Box, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, IconButton, MenuItem, SwipeableDrawer, TextField, Typography, useMediaQuery } from '@mui/material'
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { capabilitiesOf, useMj, type MjColumn, type MjGridConfig, type MjMobileOptions, type MjRow, type MjSort } from '../core'
+import { drawerPaper, tfSlots } from './compat'
 
 // ---------------------------------------------------------------------------
 // Detection
@@ -141,7 +142,7 @@ export function MjSheet({ open, onClose, title, children, actions, mobile, size,
   return (
     // keepMounted:false — the SwipeableDrawer default keeps a closed sheet in the DOM, which would keep form state alive across opens
     <SwipeableDrawer anchor="bottom" open={open} onClose={onClose} onOpen={() => {}} disableSwipeToOpen data-testid={testId} ModalProps={{ keepMounted: false }}
-      PaperProps={{ sx: { borderTopLeftRadius: full ? 0 : 16, borderTopRightRadius: full ? 0 : 16, height: full ? '100dvh' : 'auto', maxHeight: full ? '100dvh' : '92dvh', display: 'flex', flexDirection: 'column', ...touchSx } }}>
+      {...drawerPaper({ sx: { borderTopLeftRadius: full ? 0 : 16, borderTopRightRadius: full ? 0 : 16, height: full ? '100dvh' : 'auto', maxHeight: full ? '100dvh' : '92dvh', display: 'flex', flexDirection: 'column', ...touchSx } })}>
       <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center', px: 1, pt: 1, pb: 0.5, borderBottom: '1px solid', borderColor: 'divider' }}>
         {!full && <Box sx={{ position: 'absolute', top: 6, left: '50%', width: 36, height: 4, borderRadius: 2, bgcolor: 'divider', transform: 'translateX(-50%)' }} />}
         <IconButton aria-label={L.close} onClick={onClose} sx={{ mt: full ? 0 : 1 }}>✕</IconButton>
@@ -170,8 +171,9 @@ export function MjSortControl({ columns, sort, onChange, sortKey }: MjSortContro
   const current = sortable.find(c => sortKey(c) === sort.field)
   return (
     <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', px: 2, pb: 1 }}>
-      <TextField select size="small" label={L.sort} value={current ? sortKey(current) : ''} sx={{ flex: 1 }} SelectProps={{ native: true }} InputLabelProps={{ shrink: true }}
-        inputProps={{ 'aria-label': L.sort }} onChange={e => e.target.value && onChange({ field: e.target.value, direction: sort.direction })}>
+      <TextField select size="small" label={L.sort} value={current ? sortKey(current) : ''} sx={{ flex: 1 }}
+        {...tfSlots({ select: { native: true }, label: { shrink: true }, html: { 'aria-label': L.sort } })}
+        onChange={e => e.target.value && onChange({ field: e.target.value, direction: sort.direction })}>
         {!current && <option value="">{columns.find(c => c.field === sort.field)?.headerName ?? sort.field}</option>}
         {sortable.map(c => <option key={c.field} value={sortKey(c)}>{c.headerName}</option>)}
       </TextField>

@@ -1,4 +1,4 @@
-import { Box, Button, Grid, Typography } from '@mui/material'
+import { Box, Button, Typography } from '@mui/material'
 import { useId, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Controller, useForm } from 'react-hook-form'
@@ -113,23 +113,24 @@ export function MjForm({ config, mode, row, onClose, mobile = desktopMobile, act
 
   return (
     <form id={formId} noValidate onSubmit={submit} data-testid="mj-form">
-      <Grid container spacing={2}>
+      {/* plain CSS grid: MUI's Grid API changed twice between 5 and 9 */}
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, minmax(0, 1fr))', gap: 2 }}>
         {columns.map(c => {
           const { Field } = renderersFor(c)
           if (!Field) return null
           return (
-            <Grid item xs={12} sm={mobile.active ? 12 : spanOf(c, config)} key={c.field}>
+            <Box key={c.field} sx={{ gridColumn: { xs: 'span 12', sm: `span ${mobile.active ? 12 : spanOf(c, config)}` }, minWidth: 0 }}>
               <Controller name={c.field} control={control} render={({ field }) => (
                 <Field column={c} value={field.value} onChange={field.onChange} error={errors[c.field]?.message as string | undefined}
                   disabled={mode === 'view'} getValues={getValues} setValue={setValue} viewMode={mode === 'view'} />
               )} />
-            </Grid>
+            </Box>
           )
         })}
         {actionsContainer
           ? createPortal(buttons, actionsContainer)
-          : <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, '& .MuiButton-root': mobile.active ? { flex: 1 } : undefined }}>{buttons}</Grid>}
-      </Grid>
+          : <Box sx={{ gridColumn: 'span 12', display: 'flex', justifyContent: 'flex-end', gap: 1, '& .MuiButton-root': mobile.active ? { flex: 1 } : undefined }}>{buttons}</Box>}
+      </Box>
       <MjSheet open={confirmDelete} onClose={() => setConfirmDelete(false)} title={L.confirmDeleteTitle} mobile={mobile} size="xs" data-testid="mj-confirm-delete"
         actions={
           <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', '& .MuiButton-root': mobile.active ? { flex: 1 } : undefined }}>

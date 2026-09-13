@@ -1,6 +1,7 @@
 import { Autocomplete, Box, Button, Checkbox, FormControl, FormControlLabel, FormLabel, TextField, Typography } from '@mui/material'
 import { columnTypeRegistry, useMj, useMjOptions, type MjColumnType } from '../core'
 import type { FieldProps, TypeRenderers } from './registry'
+import { tfSlots } from './compat'
 
 const KO_DAYS: [string, string, string, string, string, string, string] = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일']
 const req = (c: FieldProps['column']) => c.rules?.some(r => r.required)
@@ -9,7 +10,7 @@ const req = (c: FieldProps['column']) => c.rules?.some(r => r.required)
 export function TimeField({ column, value, onChange, error, disabled }: FieldProps<'time'>) {
   const v = typeof value === 'string' ? value.slice(0, 5) : ''
   return <TextField fullWidth size="small" type="time" label={column.headerName} value={v} disabled={disabled} required={req(column)}
-    InputLabelProps={{ shrink: true }} inputProps={{ step: (column.params?.step ?? 60) * 60 }} error={Boolean(error)} helperText={error}
+    {...tfSlots({ label: { shrink: true }, html: { step: (column.params?.step ?? 60) * 60 } })} error={Boolean(error)} helperText={error}
     onChange={e => onChange(e.target.value ? `${e.target.value}:00` : null)} />
 }
 
@@ -21,9 +22,9 @@ export function TimeRangeField({ column, value, onChange, error, disabled }: Fie
     <FormControl fullWidth error={Boolean(error)} disabled={disabled}>
       <FormLabel sx={{ fontSize: 13, mb: 0.5 }}>{column.headerName}{req(column) ? ' *' : ''}</FormLabel>
       <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-        <TextField size="small" type="time" value={start ?? ''} disabled={disabled} inputProps={{ 'aria-label': `${column.headerName} start` }} onChange={e => set(e.target.value || null, end)} sx={{ flex: 1 }} />
+        <TextField size="small" type="time" value={start ?? ''} disabled={disabled} {...tfSlots({ html: { 'aria-label': `${column.headerName} start` } })} onChange={e => set(e.target.value || null, end)} sx={{ flex: 1 }} />
         <span>~</span>
-        <TextField size="small" type="time" value={end ?? ''} disabled={disabled} inputProps={{ 'aria-label': `${column.headerName} end` }} onChange={e => set(start, e.target.value || null)} sx={{ flex: 1 }} />
+        <TextField size="small" type="time" value={end ?? ''} disabled={disabled} {...tfSlots({ html: { 'aria-label': `${column.headerName} end` } })} onChange={e => set(start, e.target.value || null)} sx={{ flex: 1 }} />
       </Box>
       {error && <Typography variant="caption" color="error">{error}</Typography>}
     </FormControl>
@@ -57,7 +58,7 @@ export function AddressField({ column, value, onChange, error, disabled }: Field
     <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
       <TextField fullWidth size="small" label={column.headerName} value={(value as string) ?? ''} disabled={disabled} required={req(column)}
         error={Boolean(error)} helperText={error} onChange={e => onChange(e.target.value)} onClick={() => hasDaum && !disabled && open()}
-        inputProps={{ readOnly: hasDaum }} />
+        {...tfSlots({ html: { readOnly: hasDaum } })} />
       {hasDaum && <Button variant="contained" color="secondary" disabled={disabled} onClick={open} sx={{ whiteSpace: 'nowrap', mt: 0.25 }}>{labels.addressSearch}</Button>}
     </Box>
   )

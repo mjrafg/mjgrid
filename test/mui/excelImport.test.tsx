@@ -51,6 +51,8 @@ describe('Excel import', () => {
     fireEvent.change(document.querySelector('input[type="file"][accept=".xlsx"]') as HTMLInputElement, { target: { files: [xlsxFile([['품목코드', '수량'], ['', 1]])] } })
     const dlg = await screen.findByRole('dialog')
     await within(dlg).findByText(/1건/)
+    // the preview grid loads its editable copy in an effect; submit only once the row editor exists
+    await waitFor(() => expect(within(dlg).getAllByRole('textbox').length).toBeGreaterThan(0))
     fireEvent.click(within(dlg).getByText('등록'))
     await waitFor(() => expect(t.bad).toHaveLength(1))
     expect(t.bad[0]).toMatch(/NO1: 품목코드/)

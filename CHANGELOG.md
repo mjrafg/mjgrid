@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.3.0
+
+- **MUI 5.12 → 9 and React 18 → 19 supported** (peers `@mui/material >=5.12 <10`, `react >=18 <20`). MUI 9 removed `inputProps` / `InputProps` / `InputLabelProps` / `FormHelperTextProps` / `SelectProps` / `PaperProps` and changed `Grid`; MUI 5 lacks `slotProps`. `compat.ts` (`tfSlots`, `drawerPaper`, `muiMajor`) spells the props for the installed version; the form layout is a plain CSS grid.
+- Development now runs on MUI 9.4 / React 19; `npm run test:matrix` (and CI) re-runs typecheck + tests on MUI 5.12.2 / React 18.2.0.
+
 ## 1.2.1
 
 - Fix: `dayjs/plugin/customParseFormat` imported with its `.js` extension — 1.2.0 failed to load under Node's native ESM loader (Next.js SSR).
