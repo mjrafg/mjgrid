@@ -1,10 +1,11 @@
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid } from '@mui/material'
+import { Box, Button, Grid, Typography } from '@mui/material'
 import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { fillUrlTemplate, MjApiError, MjValidationError, useMj, useMjSave, useMjUpload, validateField, duplicateMessage, type MjColumn, type MjGridConfig, type MjRow } from '../core'
 import { resolvePendingUploads } from './files'
 import { ensureDefaults } from './bootstrap'
 import { renderersFor } from './registry'
+import { MjSheet, type MjMobileState } from './mobile'
 
 export type MjFormMode = 'insert' | 'update' | 'view'
 
@@ -13,6 +14,7 @@ export interface MjFormProps {
   mode: MjFormMode
   row?: Partial<MjRow>
   onClose: (changed: boolean) => void
+  mobile?: MjMobileState
 }
 
 export function formColumns(config: MjGridConfig, mode: MjFormMode): MjColumn[] {
@@ -23,6 +25,7 @@ export function formColumns(config: MjGridConfig, mode: MjFormMode): MjColumn[] 
 }
 
 const spanOf = (c: MjColumn, config: MjGridConfig) => c.span ?? (config.dialogSize === 'xs' ? 12 : 6)
+const desktopMobile: MjMobileState = { active: false, layout: 'cards', cardFields: 3, sheet: 'sheet', history: false }
 
 /**
  * Create / edit / view form. One Controller per column; the field component
@@ -33,7 +36,7 @@ const spanOf = (c: MjColumn, config: MjGridConfig) => c.span ?? (config.dialogSi
  */
 ensureDefaults()
 
-export function MjForm({ config, mode, row, onClose }: MjFormProps) {
+export function MjForm({ config, mode, row, onClose, mobile = desktopMobile }: MjFormProps) {
   const { api, toast, labels: L } = useMj()
   const { saveOne, deleteOne, isSaving } = useMjSave(config)
   const { upload } = useMjUpload()
@@ -103,7 +106,7 @@ export function MjForm({ config, mode, row, onClose }: MjFormProps) {
           const { Field } = renderersFor(c)
           if (!Field) return null
           return (
-            <Grid item xs={12} sm={spanOf(c, config)} key={c.field}>
+            <Grid item xs={12} sm={mobile.active ? 12 : spanOf(c, config)} key={c.field}>
               <Controller name={c.field} control={control} render={({ field }) => (
                 <Field column={c} value={field.value} onChange={field.onChange} error={errors[c.field]?.message as string | undefined}
                   disabled={mode === 'view'} getValues={getValues} setValue={setValue} viewMode={mode === 'view'} />
@@ -111,20 +114,24 @@ export function MjForm({ config, mode, row, onClose }: MjFormProps) {
             </Grid>
           )
         })}
-        <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
+        <Grid item xs={12} sx={mobile.active
+          // sticky inside the sheet's scroll area: the buttons stay reachable above the keyboard without a second scroll container
+          ? { position: 'sticky', bottom: -16, mx: -2, px: 2, py: 1.5, bgcolor: 'background.paper', borderTop: '1px solid', borderColor: 'divider', display: 'flex', gap: 1, '& .MuiButton-root': { flex: 1 } }
+          : { display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
           <Button variant="contained" color="error" onClick={() => onClose(false)}>{L.cancel}</Button>
           {mode === 'update' && (config.deletable ?? true) && <Button variant="outlined" color="error" onClick={() => setConfirmDelete(true)} disabled={isSaving}>{L.delete}</Button>}
           {mode !== 'view' && <Button type="submit" variant="contained" disabled={isSaving}>{mode === 'insert' ? config.addButtonText ?? L.register : L.update}</Button>}
         </Grid>
       </Grid>
-      <Dialog open={confirmDelete} onClose={() => setConfirmDelete(false)}>
-        <DialogTitle>{L.confirmDeleteTitle}</DialogTitle>
-        <DialogContent>{L.confirmDeleteBody}</DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmDelete(false)}>{L.cancel}</Button>
-          <Button color="error" variant="contained" onClick={doDelete}>{L.confirm}</Button>
-        </DialogActions>
-      </Dialog>
+      <MjSheet open={confirmDelete} onClose={() => setConfirmDelete(false)} title={L.confirmDeleteTitle} mobile={mobile} size="xs" data-testid="mj-confirm-delete"
+        actions={
+          <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', '& .MuiButton-root': mobile.active ? { flex: 1 } : undefined }}>
+            <Button onClick={() => setConfirmDelete(false)}>{L.cancel}</Button>
+            <Button color="error" variant="contained" onClick={doDelete}>{L.confirm}</Button>
+          </Box>
+        }>
+        <Typography>{L.confirmDeleteBody}</Typography>
+      </MjSheet>
     </form>
   )
 }

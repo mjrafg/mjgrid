@@ -1,8 +1,9 @@
-import { Dialog, DialogContent, DialogTitle, IconButton, InputAdornment, TextField } from '@mui/material'
+import { Box, IconButton, InputAdornment, TextField } from '@mui/material'
 import { useState } from 'react'
 import { useMj, type ColumnOf, type MjRow } from '../core'
 import { getGridComponent, type EditorProps, type FieldProps, type TypeRenderers } from './registry'
 import { displayValue } from './value'
+import { MjSheet, useMjMobile } from './mobile'
 
 interface PickerProps {
   column: ColumnOf<'selectGrid'>
@@ -31,7 +32,8 @@ export function SelectGridPicker({ column, value, row, onPick, error, disabled, 
   const text = displayValue(column, value, row)
   const title = typeof p.dialogTitle === 'function' ? p.dialogTitle(value, row) : p.dialogTitle ?? labels.selectTitle(p.grid.name)
   const Grid = getGridComponent()
-  const nested = { ...p.grid, editMode: 'readonly' as const, hooks: { ...p.grid.hooks, onRowClick: (r: Record<string, unknown>) => { onPick(r); setOpen(false) } } }
+  const mobile = useMjMobile(p.grid)
+  const nested = { ...p.grid, editMode: 'readonly' as const, hooks: { ...p.grid.hooks, onRowClick: (r: Record<string, unknown>) => { onPick(r); setOpen(false) } }, mobile: { ...p.grid.mobile, history: false } }
 
   return (
     <>
@@ -46,10 +48,9 @@ export function SelectGridPicker({ column, value, row, onPick, error, disabled, 
             </InputAdornment>
           )
         }} />
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth={p.grid.dialogSize ?? 'md'}>
-        <DialogTitle>{title}</DialogTitle>
-        <DialogContent sx={{ minHeight: 400 }}>{open && <Grid config={nested} />}</DialogContent>
-      </Dialog>
+      <MjSheet open={open} onClose={() => setOpen(false)} title={title} size={p.grid.dialogSize ?? 'md'} mobile={mobile} data-testid="mj-select-grid">
+        <Box sx={{ minHeight: mobile.active ? undefined : 400, height: mobile.active ? '70dvh' : undefined }}>{open && <Grid config={nested} />}</Box>
+      </MjSheet>
     </>
   )
 }

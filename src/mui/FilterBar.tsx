@@ -1,18 +1,21 @@
-import { Box, Button, IconButton, MenuItem, TextField } from '@mui/material'
+import { Badge, Box, Button, IconButton, MenuItem, TextField } from '@mui/material'
 import { useState } from 'react'
 import dayjs from 'dayjs'
 import { filterFor, useMj, useMjOptions, type MjColumn, type MjDateRange, type MjFilter, type MjGridConfig } from '../core'
+import { MjSheet, type MjMobileState } from './mobile'
 
 export interface MjFilterBarProps {
   config: MjGridConfig
   onSearch: (filters: MjFilter[]) => void
+  /** mobile: renders a badge button that opens the controls in a sheet; place it next to the search box */
+  mobile?: MjMobileState
 }
 
 function SelectFilter({ column, value, onChange }: { column: Extract<MjColumn, { type: 'select' }>; value: string; onChange: (v: string) => void }) {
   const { options } = useMjOptions(column.params)
   const { labels } = useMj()
   return (
-    <TextField select size="small" label={column.headerName} value={value} sx={{ minWidth: 160 }} onChange={e => onChange(e.target.value)}>
+    <TextField select size="small" label={column.headerName} value={value} sx={{ minWidth: 160 }} fullWidth onChange={e => onChange(e.target.value)}>
       {!column.params?.hideAllOption && <MenuItem value=""><em>{labels.all}</em></MenuItem>}
       {options.map(o => <MenuItem key={String(o.value)} value={String(o.value)}>{o.text}</MenuItem>)}
     </TextField>
@@ -25,12 +28,14 @@ function SelectFilter({ column, value, onChange }: { column: Extract<MjColumn, {
  * Select/boolean/date changes apply immediately; text applies on Enter or the search button.
  * Nothing fires on mount (the legacy bar issued an extra request via an effect on first render).
  */
-export function MjFilterBar({ config, onSearch }: MjFilterBarProps) {
+export function MjFilterBar({ config, onSearch, mobile }: MjFilterBarProps) {
   const { labels } = useMj()
   const columns = [...(config.extraFilterBarColumns ?? []).map(c => ({ ...c, showOnFilterBar: true })), ...config.columns]
     .filter(c => c.showOnFilterBar)
     .sort((a, b) => (a.filterBarIndex ?? 1) - (b.filterBarIndex ?? 1))
   const [values, setValues] = useState<Record<string, unknown>>({})
+  const [open, setOpen] = useState(false)
+  const isMobile = Boolean(mobile?.active)
   if (columns.length === 0) return null
 
   const apply = (next: Record<string, unknown>) => {
@@ -56,11 +61,14 @@ export function MjFilterBar({ config, onSearch }: MjFilterBarProps) {
     const next = { ...values, [c.field]: v }
     setValues(next)
     c.onFilterChange?.(v)
-    if (immediate) apply(next)
+    // on mobile everything applies from the sheet's button, never while typing behind the keyboard
+    if (immediate && !isMobile) apply(next)
   }
+  const activeCount = columns.filter(c => { const v = values[c.field]; return v !== undefined && v !== null && v !== '' && !(typeof v === 'object' && !(v as { startDate?: string }).startDate && !(v as { endDate?: string }).endDate) }).length
+  const clearAll = () => { setValues({}); onSearch([]) }
 
-  return (
-    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center', px: 2, pt: 2 }}>
+  const controls = (
+    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center', px: isMobile ? 0 : 2, pt: isMobile ? 0 : 2, flexDirection: isMobile ? 'column' : 'row', '& > *': isMobile ? { width: '100%' } : undefined }} data-testid="mj-filter-controls">
       {columns.map(c => {
         const v = values[c.field]
         switch (c.type) {
@@ -87,24 +95,46 @@ export function MjFilterBar({ config, onSearch }: MjFilterBarProps) {
             const fmt = (d: Date) => dayjs(d).format('YYYY-MM-DD')
             const active = (p: MjDateRange) => r.startDate === fmt(p.startDate()) && r.endDate === fmt(p.endDate())
             return (
-              <Box key={c.field} sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                <TextField size="small" type="date" label={c.headerName} InputLabelProps={{ shrink: true }} value={r.startDate ?? ''} onChange={e => upd('startDate', e.target.value)} />
-                <span>~</span>
-                <TextField size="small" type="date" InputLabelProps={{ shrink: true }} value={r.endDate ?? ''} onChange={e => upd('endDate', e.target.value)} />
-                {presets.map(p => (
-                  <Button key={p.name} size="small" variant={active(p) ? 'contained' : 'text'} onClick={() => setRange(active(p) ? {} : { startDate: fmt(p.startDate()), endDate: fmt(p.endDate()) })}>{p.name}</Button>
-                ))}
+              <Box key={c.field} sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row', '& > *': isMobile ? { width: '100%' } : undefined }}>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                  <TextField size="small" type="date" label={c.headerName} InputLabelProps={{ shrink: true }} value={r.startDate ?? ''} onChange={e => upd('startDate', e.target.value)} sx={isMobile ? { flex: 1 } : undefined} />
+                  <span>~</span>
+                  <TextField size="small" type="date" InputLabelProps={{ shrink: true }} value={r.endDate ?? ''} onChange={e => upd('endDate', e.target.value)} sx={isMobile ? { flex: 1 } : undefined} inputProps={{ 'aria-label': `${c.headerName} end` }} />
+                </Box>
+                <Box sx={{ display: 'flex', gap: 1, '& > .MuiButton-root': isMobile ? { flex: 1 } : undefined }}>
+                  {presets.map(p => (
+                    <Button key={p.name} size="small" variant={active(p) ? 'contained' : 'outlined'} onClick={() => setRange(active(p) ? {} : { startDate: fmt(p.startDate()), endDate: fmt(p.endDate()) })}>{p.name}</Button>
+                  ))}
+                </Box>
               </Box>
             )
           }
           default:
             return (
               <TextField key={c.field} size="small" type={c.type === 'number' ? 'number' : 'text'} label={c.headerName} value={String(v ?? '')}
-                onChange={e => set(c, e.target.value, false)} onKeyDown={e => { if (e.key === 'Enter') apply(values) }} />
+                onChange={e => set(c, e.target.value, false)} onKeyDown={e => { if (e.key === 'Enter') { apply(values); setOpen(false) } }} />
             )
         }
       })}
-      <IconButton color="primary" aria-label={labels.search} onClick={() => apply(values)}>🔍</IconButton>
+      {!isMobile && <IconButton color="primary" aria-label={labels.search} onClick={() => apply(values)}>🔍</IconButton>}
     </Box>
+  )
+
+  if (!isMobile) return controls
+  return (
+    <>
+      <Badge badgeContent={activeCount} color="primary" overlap="rectangular" sx={{ flexShrink: 0 }}>
+        <Button variant="outlined" aria-label={labels.filters} onClick={() => setOpen(true)} sx={{ minHeight: 44, whiteSpace: 'nowrap' }}>{labels.filters}</Button>
+      </Badge>
+      <MjSheet open={open} onClose={() => setOpen(false)} title={labels.filters} mobile={mobile!} data-testid="mj-filter-sheet"
+        actions={
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="outlined" color="error" sx={{ flex: 1 }} onClick={() => { clearAll(); setOpen(false) }}>{labels.clear}</Button>
+            <Button variant="contained" sx={{ flex: 2 }} onClick={() => { apply(values); setOpen(false) }}>{labels.apply}</Button>
+          </Box>
+        }>
+        {controls}
+      </MjSheet>
+    </>
   )
 }

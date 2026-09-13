@@ -18,6 +18,7 @@ export interface MjLabels {
   excelPreviewTitle: (name: string) => string; excelRowsFound: (n: number) => string
   errorPrefix: (rowNo: number) => string
   today: string; week: string; month: string
+  signStaged: string; filters: string; apply: string; sort: string; ascending: string; descending: string; more: string; less: string; close: string; menu: string; selectedRow: string
 }
 
 export const koLabels: MjLabels = {
@@ -39,7 +40,8 @@ export const koLabels: MjLabels = {
   rowAdd: '행 추가', rowRemove: '행 삭제', rowNumber: 'NO',
   excelPreviewTitle: n => `${n} 엑셀업로드`, excelRowsFound: n => `${n}건`,
   errorPrefix: n => `NO${n}: `,
-  today: '오늘', week: '일주일', month: '한달'
+  today: '오늘', week: '일주일', month: '한달',
+  signStaged: '서명이 등록되었습니다. 저장 시 업로드됩니다.', filters: '필터', apply: '적용', sort: '정렬', ascending: '오름차순', descending: '내림차순', more: '더보기', less: '접기', close: '닫기', menu: '메뉴', selectedRow: '선택됨'
 }
 
 export const enLabels: MjLabels = {
@@ -61,5 +63,6 @@ export const enLabels: MjLabels = {
   rowAdd: 'Add row', rowRemove: 'Remove row', rowNumber: '#',
   excelPreviewTitle: n => `Import ${n} from Excel`, excelRowsFound: n => `${n} rows`,
   errorPrefix: n => `Row ${n}: `,
-  today: 'Today', week: 'Week', month: 'Month'
+  today: 'Today', week: 'Week', month: 'Month',
+  signStaged: 'Signature captured; it uploads when you save.', filters: 'Filters', apply: 'Apply', sort: 'Sort', ascending: 'Ascending', descending: 'Descending', more: 'More', less: 'Less', close: 'Close', menu: 'Menu', selectedRow: 'Selected'
 }

@@ -93,7 +93,8 @@ export function SignaturePad({ onChange, storageType, initial, disabled }: Signa
     ctx.lineWidth = 3; ctx.lineCap = 'round'
     if (initial?.thumbnailPath) { const img = new Image(); img.crossOrigin = 'anonymous'; img.onload = () => ctx.drawImage(img, 0, 0, c.width, c.height); img.src = files.imageUrl(initial.thumbnailPath.replace('s_', '')) }
   }, [initial, files])
-  const pos = (e: React.PointerEvent) => { const r = ref.current!.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top } }
+  // the canvas is 300x300 logical pixels but may be displayed narrower on a phone; map pointer to canvas space
+  const pos = (e: React.PointerEvent) => { const c = ref.current!; const r = c.getBoundingClientRect(); return { x: (e.clientX - r.left) * (c.width / r.width), y: (e.clientY - r.top) * (c.height / r.height) } }
   const down = (e: React.PointerEvent) => { if (disabled) return; drawing.current = true; const ctx = ref.current!.getContext('2d')!; const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y) }
   const move = (e: React.PointerEvent) => { if (!drawing.current) return; const ctx = ref.current!.getContext('2d')!; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke() }
   const up = () => { drawing.current = false }
@@ -105,12 +106,13 @@ export function SignaturePad({ onChange, storageType, initial, disabled }: Signa
   }, 'image/png')
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-      <canvas ref={ref} width={300} height={300} data-testid="mj-signature" style={{ border: '2px dashed #ccc', borderRadius: 4, touchAction: 'none' }}
+      <canvas ref={ref} width={300} height={300} data-testid="mj-signature" style={{ border: '2px dashed #ccc', borderRadius: 4, touchAction: 'none', width: '100%', maxWidth: 300, aspectRatio: '1 / 1' }}
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerLeave={up} />
       <Box sx={{ display: 'flex', gap: 1 }}>
         <Button size="small" variant="outlined" color="error" onClick={clear} disabled={disabled}>{labels.signClear}</Button>
         <Button size="small" variant="contained" onClick={commit} disabled={disabled}>{labels.register}</Button>
       </Box>
+      {initial?.file && initial.isDraw && <Typography variant="caption" color="success.main" role="status">{labels.signStaged}</Typography>}
     </Box>
   )
 }

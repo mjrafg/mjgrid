@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createContext, useContext, useMemo, type ReactNode } from 'react'
 import type { MjApiClient } from '../protocol'
+import type { MjMobileOptions } from '../types'
 import { koMessages, type MjMessages } from '../messages'
 import { koLabels, type MjLabels } from '../labels'
 
@@ -31,6 +32,8 @@ export interface MjContextValue {
   labels: MjLabels
   toast: MjToast
   files: MjFileEndpoints
+  /** defaults for every grid's `mobile` option */
+  mobile: MjMobileOptions
 }
 
 const MjContext = createContext<MjContextValue | null>(null)
@@ -43,14 +46,15 @@ export interface MjProviderProps {
   labels?: Partial<MjLabels>
   files?: Partial<MjFileEndpoints>
   toast?: MjToast
+  mobile?: MjMobileOptions
   /** pass your app's QueryClient to share cache; one is created otherwise */
   queryClient?: QueryClient
   children: ReactNode
 }
 
-export function MjProvider({ api, messages, labels, files, toast, queryClient, children }: MjProviderProps) {
+export function MjProvider({ api, messages, labels, files, toast, mobile, queryClient, children }: MjProviderProps) {
   const client = useMemo(() => queryClient ?? new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } }), [queryClient])
-  const value = useMemo<MjContextValue>(() => ({ api, messages: messages ?? koMessages, labels: { ...koLabels, ...labels }, files: { ...defaultFileEndpoints, ...files }, toast: toast ?? silentToast }), [api, messages, labels, files, toast])
+  const value = useMemo<MjContextValue>(() => ({ api, messages: messages ?? koMessages, labels: { ...koLabels, ...labels }, files: { ...defaultFileEndpoints, ...files }, toast: toast ?? silentToast, mobile: mobile ?? {} }), [api, messages, labels, files, toast, mobile])
   return (
     <QueryClientProvider client={client}>
       <MjContext.Provider value={value}>{children}</MjContext.Provider>

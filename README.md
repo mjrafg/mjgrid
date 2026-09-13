@@ -56,6 +56,7 @@ const products: MjGridConfig = {
 | `messages` | validation messages (`koMessages` default, `enMessages`). |
 | `files` | `{ uploadUrl, downloadUrl(file), imageUrl(path) }` — defaults match the HACCP backend. |
 | `queryClient` | share your app's TanStack QueryClient (one is created otherwise). |
+| `mobile` | default `MjMobileOptions` for every grid (see [Mobile](#mobile)). |
 
 ### MjApiClient
 
@@ -114,6 +115,7 @@ Override any URL with `config.urls.{fetch,insert,insertBulk,update,updateBulk,de
 | `sequenceField` | string | inline: visible order written into this field on save |
 | `keepOneRow` | boolean | inline: always keep an editable row |
 | `printColor` | string \| (row) => string | |
+| `mobile` | `MjMobileOptions` | see [Mobile](#mobile) |
 | `hooks` | `MjGridHooks` | see below |
 
 ### hooks
@@ -126,7 +128,7 @@ Override any URL with `config.urls.{fetch,insert,insertBulk,update,updateBulk,de
 { field, headerName, type, params?, width?, editable?, filterable?, sortable?, hide?,
   rules?, defaultValue?, formOnly?, showOnFilterBar?, filterBarIndex?, hideOnExcel?, hideOnView?, hideOnPrint?,
   path?, parentPath?, sortField?, span?, formIndex?, footerText?, footerAlign?, excelExampleValue?,
-  printFormat?, printColor?, getFilters?, filterDefaultValue?, onFilterChange?, renderCell? }
+  printFormat?, printColor?, getFilters?, filterDefaultValue?, onFilterChange?, renderCell?, hideOnMobile?, mobileRole? }
 ```
 
 `params` is typed per `type` (discriminated union) — a `fetchUrl` on a `boolean` column is a compile error.
@@ -155,6 +157,32 @@ Read-only cells exist for every type. Files are **staged** when chosen and uploa
 ### rules
 
 `required`, `min`, `max`, `minEqual`, `maxEqual`, `minLength`, `maxLength`, `email`, `password`, `passwordRepeat`, `mask`, `duplicate: false` (unique within a batch), `message` (override), `validate(row) → message`.
+
+## Mobile
+
+Below 768px (configurable) the grid switches to a phone layout automatically; nothing else changes in your config.
+
+```tsx
+<MjProvider api={api} mobile={{ breakpoint: 900 }}>          // defaults for every grid
+<MjGrid config={{ ...cfg, mobile: { layout: 'table', cardFields: 4 } }} />   // per grid
+```
+
+| option | default | effect |
+|---|---|---|
+| `enabled` | `'auto'` | `true` / `false` force the layout; `'auto'` follows `breakpoint` |
+| `breakpoint` | `768` | viewport width (px) below which the grid is mobile |
+| `layout` | `'cards'` | rows as cards, or a horizontally scrolling `'table'` |
+| `cardFields` | `3` | fields shown on a collapsed card besides the title; the rest sit behind **더보기** |
+| `sheet` | `'sheet'` | overlays as a bottom sheet, or `'full'` screen |
+| `history` | `true` on mobile | push one history entry per open overlay so the **browser back button closes it**; `'always'` does the same on desktop |
+
+What changes on a phone:
+
+- **Cards instead of rows.** The title is the first text column (or the column with `mobileRole: 'title'`); `mobileRole: 'always'` pins a field above the fold; `hideOnMobile` drops it from the card (it stays in the form). Button columns render in the card footer. In inline mode the editors render inside the cards with the +/− row actions; tapping a card selects it.
+- **Sort control** replaces header sorting.
+- **Bottom sheets** for the create/edit/view form (full-width fields, sticky action bar), delete confirm, Excel preview, the `selectGrid` picker and the filter bar (a badge button; filters apply from the sheet's 적용 button, never while typing).
+- **Back closes the open sheet**: nested sheets close innermost-first, closing from the UI leaves no phantom history entry, and the host's own `history.state` is preserved (the entry is tagged `__mjOverlay`). Use `useHistoryDismiss(open, onClose, enabled)` and `MjSheet` for your own overlays.
+- **Toolbar**: full-width search with `enterKeyHint="search"`, primary actions at 44px, secondary ones (Excel, print) behind ⋮; compact pager with safe-area padding; 16px inputs so iOS does not zoom; signature canvas scales to the screen.
 
 ## Imperative API
 

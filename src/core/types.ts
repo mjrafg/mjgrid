@@ -224,6 +224,10 @@ export interface MjColumnBase {
   hideOnExcel?: boolean
   hideOnView?: boolean
   hideOnPrint?: boolean
+  /** not rendered on the mobile card (still in the form) */
+  hideOnMobile?: boolean
+  /** mobile card: 'title' is the card heading; 'always' is never collapsed behind "more" */
+  mobileRole?: 'title' | 'always'
   /** nested property to read/filter/sort on, e.g. field 'material', path 'name' */
   path?: string
   /** read the field from a parent object on the row */
@@ -318,6 +322,26 @@ export interface MjSort {
 
 export type MjEditMode = 'dialog' | 'inline' | 'readonly'
 
+/**
+ * Mobile behaviour. Defaults: switch below 768px, rows become cards, forms
+ * and pickers open as bottom sheets, and the browser back button closes
+ * whatever is open. Provider-level `mobile` is merged under the config's.
+ */
+export interface MjMobileOptions {
+  /** 'auto' (default) follows `breakpoint`; true / false force the layout */
+  enabled?: boolean | 'auto'
+  /** viewport width in px below which the grid is mobile (default 768) */
+  breakpoint?: number
+  /** 'cards' (default) or a horizontally scrolling 'table' */
+  layout?: 'cards' | 'table'
+  /** how many fields a collapsed card shows besides the title (default 3) */
+  cardFields?: number
+  /** overlays as bottom 'sheet' (default) or 'full' screen */
+  sheet?: 'sheet' | 'full'
+  /** push a history entry per open overlay so back closes it (default true on mobile; 'always' also on desktop) */
+  history?: boolean | 'always'
+}
+
 export interface MjGridConfig {
   /** display name used in titles and toasts, e.g. '제품' */
   name: string
@@ -355,6 +379,7 @@ export interface MjGridConfig {
   keepOneRow?: boolean
   printColor?: string | ((row: Record<string, unknown>) => string)
   hooks?: MjGridHooks
+  mobile?: MjMobileOptions
 }
 
 export interface MjGridHooks {

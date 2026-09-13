@@ -1,4 +1,4 @@
-import { Box, Dialog, DialogContent, DialogTitle, IconButton, LinearProgress, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, TableSortLabel } from '@mui/material'
+import { Box, IconButton, LinearProgress, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, TableSortLabel } from '@mui/material'
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
 import dayjs from 'dayjs'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState, type ReactNode } from 'react'
@@ -12,6 +12,7 @@ import { renderersFor, setGridComponent } from './registry'
 import { MjToolbar } from './Toolbar'
 import { ExcelImportDialog } from './ExcelImport'
 import { readCell } from './value'
+import { MjCardFooter, MjCardList, MjSheet, MjSortControl, useMjMobile } from './mobile'
 
 export interface MjGridProps {
   config: MjGridConfig
@@ -45,6 +46,8 @@ ensureDefaults()
 
 export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ config, title, actions, onSelect }, ref) {
   const { toast, labels: L } = useMj()
+  const mobile = useMjMobile(config)
+  const cards = mobile.active && mobile.layout === 'cards'
   const q = useMjQuery(config)
   const edit = useMjRows(config.columns)
   const { saveBatch, deleteOne } = useMjSave(config)
@@ -65,25 +68,27 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
   // keepOneRow: an inline grid that must always offer an editable row
   useEffect(() => { if (inline && config.keepOneRow && edit.visibleRows.length === 0) edit.addRow() }, [inline, config.keepOneRow, edit.visibleRows.length, edit])
 
+  const isEditing = useCallback((c: MjColumn) => inline && Boolean(c.editable) && Boolean(renderersFor(c).Editor) && capabilitiesOf(c).inlineCapable, [inline])
+  const renderCell = useCallback((c: MjColumn, row: MjRow, value: unknown = readCell(c, row)): ReactNode => {
+    const r = renderersFor(c)
+    if (isEditing(c)) {
+      const E = r.Editor!
+      const err = edit.errorFor(row.id, c.field)?.message
+      return <E column={c as never} row={row} value={value} error={err} onChange={(v, patch) => edit.setCell(row.id, c.field, v, patch)} />
+    }
+    if (c.renderCell) return <>{c.renderCell({ value, row, column: c }) as ReactNode}</>
+    const C = r.Cell
+    return <C column={c as never} row={row} value={value} />
+  }, [isEditing, edit])
+
   const tableColumns = useMemo<ColumnDef<MjRow>[]>(() => visibleColumns.map(c => ({
     id: c.field,
     header: c.headerName,
     size: c.width ?? capabilitiesOf(c).width,
     enableSorting: c.sortable !== false && c.type !== 'button',
     accessorFn: row => readCell(c, row),
-    cell: ({ row, getValue }) => {
-      const r = renderersFor(c)
-      const value = getValue()
-      if (inline && c.editable && r.Editor && capabilitiesOf(c).inlineCapable) {
-        const E = r.Editor
-        const err = edit.errorFor(row.original.id, c.field)?.message
-        return <E column={c as never} row={row.original} value={value} error={err} onChange={(v, patch) => edit.setCell(row.original.id, c.field, v, patch)} />
-      }
-      if (c.renderCell) return <>{c.renderCell({ value, row: row.original, column: c }) as ReactNode}</>
-      const C = r.Cell
-      return <C column={c as never} row={row.original} value={value} />
-    }
-  })), [visibleColumns, inline, edit])
+    cell: ({ row, getValue }) => renderCell(c, row.original, getValue())
+  })), [visibleColumns, renderCell])
 
   const actionColumn = useMemo<ColumnDef<MjRow>[]>(() => rowActions ? [{
     id: '__actions', header: '+ / -', size: 90, enableSorting: false,
@@ -186,15 +191,25 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
     downloadBlob(blob, `${config.name}${example ? '_양식' : ''}_${dayjs().format('YYYYMMDDHHmmss')}.xlsx`)
   }
   const onPrint = async () => openPrintWindow(buildPrintHtml(config, await q.fetchAll(), L))
+  const closeDialog = () => { setDialog(null); config.hooks?.onDialogClose?.() }
+  const rowsClickable = mode !== 'readonly' || Boolean(config.hooks?.onRowClick)
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }} data-testid="mj-grid">
-      <MjFilterBar config={config} onSearch={q.setFilters} />
-      <MjToolbar config={config} search={q.search} onSearch={q.setSearch} onAdd={onAdd} onSave={inline ? onSave : undefined}
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }} data-testid="mj-grid" data-mobile={mobile.active || undefined}>
+      {!mobile.active && <MjFilterBar config={config} onSearch={q.setFilters} />}
+      <MjToolbar config={config} search={q.search} onSearch={q.setSearch} onAdd={mode === 'readonly' && !config.hooks?.onAddClick ? undefined : onAdd} onSave={inline ? onSave : undefined} mobile={mobile.active}
+        filterButton={mobile.active ? <MjFilterBar config={config} onSearch={q.setFilters} mobile={mobile} /> : undefined}
         onDelete={inline ? onDelete : undefined} canDelete={Boolean(selected)} onExcelExport={onExcelExport} onExcelImport={setImportFile} onPrint={onPrint} title={title} actions={actions} />
       {q.isFetching && <LinearProgress />}
       {q.error && <Box sx={{ color: 'error.main', px: 2 }} role="alert">{q.error.message}</Box>}
-      <TableContainer sx={{ flex: 1 }}>
+      {cards && <MjSortControl columns={visibleColumns} sort={q.sort} onChange={q.setSort} sortKey={sortKey} />}
+      {cards && (
+        <MjCardList config={config} columns={visibleColumns} rows={rows} mobile={mobile} renderCell={renderCell} isEditing={isEditing}
+          selected={selected} onRowClick={onRowClick} clickable={rowsClickable} loading={q.isLoading} emptyText={L.noData}
+          rowActions={rowActions ? { addLabel: L.rowAdd, removeLabel: L.rowRemove, add: row => edit.addRow(undefined, edit.rows.findIndex(r => r.id === row.id) + 1), remove: row => edit.removeRow(row.id) } : undefined}
+          footer={hasFooter ? <MjCardFooter columns={visibleColumns} rows={rows} /> : undefined} />
+      )}
+      {!cards && <TableContainer sx={{ flex: 1 }}>
         <Table stickyHeader size="small">
           <TableHead>
             {table.getHeaderGroups().map(hg => (
@@ -240,16 +255,14 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
             </TableFooter>
           )}
         </Table>
-      </TableContainer>
-      <MjPagination page={q.page} pageCount={q.pageCount} total={q.total} pageSize={q.pageSize} onPageChange={q.setPage} />
+      </TableContainer>}
+      <MjPagination page={q.page} pageCount={q.pageCount} total={q.total} pageSize={q.pageSize} onPageChange={q.setPage} mobile={mobile.active} />
 
-      {config.excelImport && <ExcelImportDialog config={config} file={importFile} onClose={() => setImportFile(null)} />}
-      <Dialog open={dialog !== null} onClose={() => { setDialog(null); config.hooks?.onDialogClose?.() }} fullWidth maxWidth={config.dialogSize ?? 'sm'}>
-        <DialogTitle align="center">{config.name} {dialog?.mode === 'insert' ? L.register : dialog?.mode === 'view' ? L.view : L.edit}</DialogTitle>
-        <DialogContent>
-          {dialog && <MjForm config={config} mode={dialog.mode} row={dialog.row} onClose={() => { setDialog(null); config.hooks?.onDialogClose?.() }} />}
-        </DialogContent>
-      </Dialog>
+      {config.excelImport && <ExcelImportDialog config={config} file={importFile} onClose={() => setImportFile(null)} mobile={mobile} />}
+      <MjSheet open={dialog !== null} onClose={closeDialog} size={config.dialogSize ?? 'sm'} mobile={mobile}
+        title={<>{config.name} {dialog?.mode === 'insert' ? L.register : dialog?.mode === 'view' ? L.view : L.edit}</>}>
+        {dialog && <MjForm config={config} mode={dialog.mode} row={dialog.row} onClose={closeDialog} mobile={mobile} />}
+      </MjSheet>
     </Box>
   )
 })
