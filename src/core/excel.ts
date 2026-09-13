@@ -58,6 +58,11 @@ function convertCell(c: MjColumn, cell: unknown, options: MjOption[] | undefined
       const d = cell instanceof Date ? dayjs(cell) : dayjs(String(cell))
       return d.isValid() ? d.format('YYYY-MM-DD') : null
     }
+    case 'status': {
+      const s = String(cell).trim()
+      const hit = c.params?.options.find(o => o.text === s || String(o.value) === s)
+      return hit ? hit.value : null
+    }
     case 'select': {
       const opts = options ?? (c.params && 'options' in c.params ? c.params.options : undefined) ?? []
       const s = String(cell).trim()

@@ -17,6 +17,8 @@ export const productsConfig: MjGridConfig = {
     { field: 'unit', headerName: '사용단위', type: 'select', width: 90, editable: true, showOnFilterBar: true, path: 'name', params: unitSelect },
     { field: 'createdAt', headerName: '등록일', type: 'date', width: 110, showOnFilterBar: true, params: { format: 'YYYY-MM-DD' } },
     { field: 'active', headerName: '사용여부', type: 'boolean', width: 90, editable: true, showOnFilterBar: true, defaultValue: true },
+    { field: 'ccpStatus', headerName: 'CCP 상태', type: 'status', width: 120, editable: true, showOnFilterBar: true, mobileRole: 'always', params: { options: [
+      { value: 'normal', text: '정상', semantic: 'success' }, { value: 'warning', text: '주의', semantic: 'warning' }, { value: 'deviation', text: '이탈', semantic: 'danger' }, { value: 'pending', text: '조치 대기', semantic: 'information' }, { value: 'inactive', text: '비활성', semantic: 'gray' }] } },
     { field: 'photo', headerName: '사진', type: 'image', width: 80, editable: true, params: { signFeature: true, storageType: 'HACCP' } },
     { field: 'note', headerName: '비고', type: 'string', width: 160, editable: true, params: { multiline: true, rows: 2 } },
     { field: 'act', headerName: '액션', type: 'button', width: 110, params: { text: '상세', color: 'secondary', variant: 'outlined', onClick: async (_v, row) => { toast(`버튼 클릭: ${row.name}`) } } }

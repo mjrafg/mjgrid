@@ -31,6 +31,10 @@ export interface FieldProps<T extends MjColumnType = MjColumnType> {
   getValues: () => Record<string, unknown>
   setValue: (field: string, value: unknown) => void
   viewMode?: boolean
+  /** DOM id for the control (the form uses it to focus the first invalid field) */
+  id?: string
+  /** KRDS input height */
+  size?: 'medium' | 'large'
 }
 
 export interface TypeRenderers {

@@ -29,6 +29,8 @@ export function displayValue(column: MjColumn, value: unknown, row: MjRow, label
       }
       return String(opts?.find(o => o.value === value)?.text ?? value)
     }
+    case 'status':
+      return String(column.params?.options.find(o => String(o.value) === String(value))?.text ?? value)
     case 'selectGrid':
     case 'autocomplete':
       if (column.type === 'selectGrid' && column.params?.displayValue) return column.params.displayValue(value, row)

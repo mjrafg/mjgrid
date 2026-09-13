@@ -1,10 +1,11 @@
-import { Box, Button, Typography, useTheme } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import { useState } from 'react'
 import { useMj, type ColumnOf, type MjRow } from '../core'
 import type { CellProps } from './registry'
 import type { ComponentType } from 'react'
 import type { MjColumnType } from '../core'
 import { displayValue } from './value'
+import { krds, MjBadge, MjButton } from './krds'
 
 /** Default read-only cell for every text-like type. */
 function TextCell({ column, value, row }: CellProps) {
@@ -16,21 +17,24 @@ function NumberCell({ column, value, row }: CellProps) {
   return <Box sx={{ width: '100%', textAlign: 'right' }}>{displayValue(column, value, row)}</Box>
 }
 
+/** Boolean shown as a badge (icon + text), never color alone: positive = success, negative = gray. */
 function BooleanCell({ column, value, row }: CellProps<'boolean'>) {
-  const theme = useTheme()
   const { labels } = useMj()
   const p = column.params
   const positive = Boolean(value)
-  const red = p?.colorPositive ? positive : !positive
-  const clickable = Boolean(p?.onClick)
+  const badge = <MjBadge semantic={positive ? 'success' : 'gray'}>{displayValue(column, value, row, labels)}</MjBadge>
+  if (!p?.onClick) return badge
   return (
-    <span
-      style={{ color: red ? theme.palette.error.main : undefined, cursor: clickable ? 'pointer' : undefined }}
-      onClick={clickable ? () => p!.onClick!(positive, row) : undefined}
-    >
-      {displayValue(column, value, row, labels)}
-    </span>
+    <Box component="button" type="button" onClick={e => { e.stopPropagation(); p.onClick!(positive, row) }}
+      sx={{ all: 'unset', cursor: 'pointer', display: 'inline-flex', borderRadius: krds.radius.max, '&:focus-visible': { boxShadow: krds.focusRing } }}>{badge}</Box>
   )
+}
+
+function StatusCell({ column, value }: CellProps<'status'>) {
+  if (value === null || value === undefined || value === '') return null
+  const opt = column.params?.options.find(o => String(o.value) === String(value))
+  if (!opt) return <MjBadge semantic="gray">{String(value)}</MjBadge>
+  return <MjBadge semantic={opt.semantic} icon={opt.icon}>{opt.text}</MjBadge>
 }
 
 function SelectCell({ column, value, row }: CellProps<'select'>) {
@@ -53,12 +57,13 @@ function ButtonCell({ column, value, row }: CellProps<'button'>) {
     setLoading(true)
     try { await p.onClick(value, row) } finally { setLoading(false) }
   }
+  // MUI colour/variant params map onto KRDS variants: contained primary -> primary, outlined -> tertiary, error -> danger, text -> text
+  const variant = resolve(p.variant ?? 'contained', value, row)
+  const color = resolve(p.color ?? 'primary', value, row)
+  const krdsVariant = color === 'error' ? 'danger' : variant === 'text' ? 'text' : variant === 'outlined' ? (color === 'primary' ? 'secondary' : 'tertiary') : color === 'primary' ? 'primary' : 'secondary'
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
-      <Button size="small" disabled={loading} onClick={onClick}
-        color={resolve(p.color ?? 'primary', value, row)} variant={resolve(p.variant ?? 'contained', value, row)}>
-        {resolve(p.text, value, row)}
-      </Button>
+      <MjButton size="xsmall" variant={krdsVariant} disabled={loading} onClick={onClick}>{resolve(p.text, value, row)}</MjButton>
     </Box>
   )
 }
@@ -66,7 +71,7 @@ function ButtonCell({ column, value, row }: CellProps<'button'>) {
 export const defaultCells: Record<MjColumnType, ComponentType<CellProps>> = {
   string: TextCell, number: NumberCell, select: SelectCell as never, date: TextCell, time: TextCell, timeRange: TextCell,
   weekDays: TextCell, boolean: BooleanCell as never, image: TextCell, file: TextCell, address: TextCell,
-  button: ButtonCell as never, selectGrid: TextCell, autocomplete: TextCell, profile: TextCell, custom: TextCell
+  button: ButtonCell as never, selectGrid: TextCell, autocomplete: TextCell, profile: TextCell, custom: TextCell, status: StatusCell as never
 }
 
 export type { ColumnOf }

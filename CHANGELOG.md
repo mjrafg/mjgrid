@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.5.0
+
+**KRDS design system** (HACCAP `docs/design-system`, Korean government design system, Standard style) applied to every surface.
+
+- `krds` tokens: every colour / radius / border width / shadow / font / size is a `--krds-*` CSS variable with the official light-mode fallback; `<KrdsTokens />` ships the token sheet (semantic tokens, `html.high-contrast` thicker borders + darker grays, `html.font-size-1..5` via a `--krds-scale` multiplier); `createKrdsTheme()` for MUI.
+- `MjButton` (primary / secondary / tertiary / text / danger; 32 / 40 / 48 / 56) and `KrdsTextField` (label above the field with a red required marker, 40 / 48 / 56, gray-60 border, primary-50 focus at 2px, danger-50 error at 2px with icon, `for` / `aria-describedby` / `aria-invalid` / `aria-required`).
+- Table per components/tables.md: gray-5 header (body-small 700, gray-30 bottom border), 48px rows with gray-20 borders, hover primary-5, selected row primary-5 + 3px primary start border, `<caption>`, `scope="col"` / `scope="row"`, `aria-sort`, skeleton rows while loading, inline error alert, horizontal-scroll region with a hint.
+- `MjBadge` and a new **`status` column type** (icon + text + semantic colour, never colour alone; success / warning / danger / information / gray). Boolean cells render as badges (positive success, negative gray). Legacy `button` colours map to KRDS variants.
+- Action hierarchy: one Primary per context (create, or 저장 in inline mode); Excel / print tertiary; delete = Danger; form bar `[tertiary Cancel] [Danger delete] [Primary submit]`, large on mobile.
+- Forms: error summary above the form (`role="alert"`) + inline errors + focus moved to the first invalid field; `config.inputSize: 'large'` for operator forms.
+- Filters: active filters shown as removable chips; result count is a live region.
+- Pagination: page-size selector 10 / 20 / 50 (`config.pageSizeOptions`), Primary interaction colours, 44px targets, `aria-current`.
+- Overlays: modal / sheet radius 12, shadow-3, backdrop rgba(0,0,0,.75); popover / menu shadow-2. Mobile cards: 1px gray-20 border, radius 10, 20px padding, fields as a `dl`.
+- 4px focus ring (`--krds-box-shadow-outline`) on every interactive element; Pretendard GOV font stack.
+
 ## 1.4.1
 
 - Filter bar (desktop): date presets and the search button are 40px like the small inputs beside them; select filters back to their natural width (full width only in the mobile sheet).

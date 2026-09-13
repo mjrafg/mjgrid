@@ -40,7 +40,13 @@ export function tfSlots(s: TextFieldSlots): Record<string, unknown> {
   return out
 }
 
-/** Spread into <Drawer> / <SwipeableDrawer> to style the paper. */
+/** Spread into <Drawer> / <SwipeableDrawer> / <Dialog> to style the paper. */
 export function drawerPaper(props: Record<string, unknown>): Record<string, unknown> {
   return muiSlotApi ? { slotProps: { paper: props } } : { PaperProps: props }
+}
+export const dialogPaper = drawerPaper
+
+/** Spread into <Checkbox> / <Radio> / <Switch> for attributes of the underlying <input>. */
+export function checkInput(props: Record<string, unknown>): Record<string, unknown> {
+  return muiSlotApi ? { slotProps: { input: props } } : { inputProps: props }
 }

@@ -13,7 +13,7 @@ const users: Row[] = [{ id: 'usr1', name: '김철수', role: 'admin' }, { id: 'u
 const kinds = ['김치', '육수', '소스', '조림', '즉석조리식품']
 const products: Row[] = Array.from({ length: 68 }, (_, i) => ({
   id: `p${i + 1}`, code: i === 3 ? 'P-LOCKED' : `EG${String(1000 + i).padStart(5, '0')}`, name: `${kinds[i % 5]} ${i + 1}호`, typeCode: `T${i % 5}`, type: kinds[i % 5],
-  reportNumber: i % 3 ? `2019021${i}` : null, shelfLife: (i % 4) * 30, unit: units[i % 3], packageUnit: units[(i + 1) % 3], note: null, active: i % 7 !== 0,
+  reportNumber: i % 3 ? `2019021${i}` : null, shelfLife: (i % 4) * 30, unit: units[i % 3], packageUnit: units[(i + 1) % 3], note: null, active: i % 7 !== 0, ccpStatus: ['normal', 'normal', 'warning', 'normal', 'deviation', 'pending', 'inactive'][i % 7],
   createdAt: new Date(2026, 0, 1 + (i % 28), 9, 0).toISOString(), photo: null, softDelete: false, seq: i
 }))
 const inventory: Row[] = [

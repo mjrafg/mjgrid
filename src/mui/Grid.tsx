@@ -1,4 +1,4 @@
-import { Box, IconButton, LinearProgress, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, TableSortLabel } from '@mui/material'
+import { Box, IconButton, LinearProgress, Skeleton, Table, TableBody, TableCell, TableContainer, TableFooter, TableHead, TableRow, TableSortLabel } from '@mui/material'
 import { flexRender, tableFeatures, useTable, type ColumnDef } from '@tanstack/react-table'
 import dayjs from 'dayjs'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useState, type ReactNode } from 'react'
@@ -13,6 +13,7 @@ import { MjToolbar } from './Toolbar'
 import { ExcelImportDialog } from './ExcelImport'
 import { readCell } from './value'
 import { MjCardFooter, MjCardList, MjMobileContext, MjSheet, MjSortControl, useMjMobile } from './mobile'
+import { krds, srOnly } from './krds'
 
 export interface MjGridProps {
   config: MjGridConfig
@@ -97,9 +98,9 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
   const actionColumn = useMemo<ColumnDef<typeof features, MjRow, unknown>[]>(() => rowActions ? [{
     id: '__actions', header: '+ / -',
     cell: ({ row }) => (
-      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }} onClick={e => e.stopPropagation()}>
-        <IconButton size="small" aria-label={L.rowAdd} onClick={() => edit.addRow(undefined, edit.rows.findIndex(r => r.id === row.original.id) + 1)}>＋</IconButton>
-        <IconButton size="small" aria-label={L.rowRemove} onClick={() => edit.removeRow(row.original.id)}>－</IconButton>
+      <Box sx={{ display: 'flex', gap: '4px', justifyContent: 'center' }} onClick={e => e.stopPropagation()}>
+        <IconButton size="small" aria-label={L.rowAdd} onClick={() => edit.addRow(undefined, edit.rows.findIndex(r => r.id === row.original.id) + 1)} sx={{ width: 40, height: 40, color: krds.color.iconGray, '&:focus-visible': { boxShadow: krds.focusRing } }}>＋</IconButton>
+        <IconButton size="small" aria-label={L.rowRemove} onClick={() => edit.removeRow(row.original.id)} sx={{ width: 40, height: 40, color: krds.color.iconGray, '&:focus-visible': { boxShadow: krds.focusRing } }}>－</IconButton>
       </Box>
     )
   }] : [], [rowActions, edit, L])
@@ -201,13 +202,13 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
 
   return (
     <MjMobileContext.Provider value={mobile}>
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }} data-testid="mj-grid" data-mobile={mobile.active || undefined}>
+    <Box className="mj-krds" sx={{ display: 'flex', flexDirection: 'column', height: '100%', fontFamily: krds.font.family, color: krds.color.textBasic, '& :focus-visible': { outline: 'none', boxShadow: krds.focusRing } }} data-testid="mj-grid" data-mobile={mobile.active || undefined}>
       {!mobile.active && <MjFilterBar config={config} onSearch={q.setFilters} />}
       <MjToolbar config={config} search={q.search} onSearch={q.setSearch} onAdd={mode === 'readonly' && !config.hooks?.onAddClick ? undefined : onAdd} onSave={inline ? onSave : undefined} mobile={mobile.active}
         filterButton={mobile.active ? <MjFilterBar config={config} onSearch={q.setFilters} mobile={mobile} /> : undefined}
         onDelete={inline ? onDelete : undefined} canDelete={Boolean(selected)} onExcelExport={onExcelExport} onExcelImport={setImportFile} onPrint={onPrint} title={title} actions={actions} />
-      {q.isFetching && <LinearProgress />}
-      {q.error && <Box sx={{ color: 'error.main', px: 2 }} role="alert">{q.error.message}</Box>}
+      {q.isFetching && <LinearProgress aria-label={L.loading} sx={{ bgcolor: krds.color.surfacePrimarySubtler, '& .MuiLinearProgress-bar': { bgcolor: krds.color.actionPrimaryActive } }} />}
+      {q.error && <Box role="alert" sx={{ mx: '16px', mb: '8px', p: '12px 16px', borderRadius: krds.radius.md, bgcolor: krds.color.surfaceDangerSubtler, border: `${krds.borderW} solid ${krds.color.borderDanger}`, color: krds.color.textDanger, fontSize: krds.fs.bodyS }}><Box component="span" aria-hidden="true" sx={{ mr: '4px' }}>✕</Box>{q.error.message}</Box>}
       {cards && <MjSortControl columns={visibleColumns} sort={q.sort} onChange={q.setSort} sortKey={sortKey} />}
       {cards && (
         <MjCardList config={config} columns={visibleColumns} rows={rows} mobile={mobile} renderCell={renderCell} isEditing={isEditing}
@@ -215,19 +216,21 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
           rowActions={rowActions ? { addLabel: L.rowAdd, removeLabel: L.rowRemove, add: row => edit.addRow(undefined, edit.rows.findIndex(r => r.id === row.id) + 1), remove: row => edit.removeRow(row.id) } : undefined}
           footer={hasFooter ? <MjCardFooter columns={visibleColumns} rows={rows} /> : undefined} />
       )}
-      {!cards && <TableContainer sx={{ flex: 1 }}>
-        <Table stickyHeader size="small">
+      {!cards && <TableContainer sx={{ flex: 1 }} role="region" aria-label={L.tableScrollHint} tabIndex={0}>
+        <Table stickyHeader size="small" sx={{ '& .MuiTableCell-root': { fontFamily: krds.font.family, fontSize: krds.fs.bodyS, color: krds.color.textBasic, borderBottom: `${krds.borderW} solid ${krds.color.borderGrayLight}`, px: '12px' } }}>
+          <caption style={srOnly as React.CSSProperties}>{config.name}</caption>
           <TableHead>
             {table.getHeaderGroups().map(hg => (
               <TableRow key={hg.id}>
                 {hg.headers.map(h => {
                   const c = visibleColumns.find(x => x.field === h.column.id)
-                  if (!c) return <TableCell key={h.id} style={{ width: 90, textAlign: 'center' }}>{flexRender(h.column.columnDef.header, h.getContext())}</TableCell>
+                  const headSx = { bgcolor: `${krds.color.surfaceGraySubtler} !important`, fontWeight: 700, borderBottom: `${krds.borderW} solid ${krds.color.borderGray}`, whiteSpace: 'nowrap' }
+                  if (!c) return <TableCell key={h.id} component="th" scope="col" style={{ width: 90, textAlign: 'center' }} sx={headSx}>{flexRender(h.column.columnDef.header, h.getContext())}</TableCell>
                   const active = q.sort.field === sortKey(c)
                   return (
-                    <TableCell key={h.id} style={{ width: widthOf(c), textAlign: capabilitiesOf(c).align }} sortDirection={active ? q.sort.direction : false}>
+                    <TableCell key={h.id} component="th" scope="col" style={{ width: widthOf(c), textAlign: capabilitiesOf(c).align }} sortDirection={active ? q.sort.direction : false} aria-sort={active ? (q.sort.direction === 'asc' ? 'ascending' : 'descending') : undefined} sx={headSx}>
                       {canSort(c)
-                        ? <TableSortLabel active={active} direction={active ? q.sort.direction : 'asc'} onClick={() => onHeaderSort(c)}>{flexRender(h.column.columnDef.header, h.getContext())}</TableSortLabel>
+                        ? <TableSortLabel active={active} direction={active ? q.sort.direction : 'asc'} onClick={() => onHeaderSort(c)} sx={{ color: `${krds.color.textBasic} !important`, '& .MuiTableSortLabel-icon': { color: `${krds.color.iconGray} !important` }, '&:focus-visible': { boxShadow: krds.focusRing, borderRadius: krds.radius.sm } }}>{flexRender(h.column.columnDef.header, h.getContext())}</TableSortLabel>
                         : flexRender(h.column.columnDef.header, h.getContext())}
                     </TableCell>
                   )
@@ -236,33 +239,41 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
             ))}
           </TableHead>
           <TableBody>
+            {q.isLoading && rows.length === 0 && Array.from({ length: 5 }, (_, i) => (
+              <TableRow key={`sk${i}`} aria-hidden="true"><TableCell colSpan={visibleColumns.length + (rowActions ? 1 : 0)} sx={{ py: '12px' }}><Skeleton variant="rounded" height={24} /></TableCell></TableRow>
+            ))}
             {table.getRowModel().rows.map(r => (
-              <TableRow key={r.id} hover selected={r.id === selected} onClick={() => onRowClick(r.original)}
-                sx={{ cursor: mode === 'readonly' && !config.hooks?.onRowClick ? 'default' : 'pointer', height: config.rowHeight ?? 40 }}>
-                {r.getAllCells().map(cell => (
-                  <TableCell key={cell.id} sx={{ py: 0.5 }}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
+              <TableRow key={r.id} hover selected={r.id === selected} onClick={() => onRowClick(r.original)} tabIndex={rowsClickable ? 0 : undefined}
+                onKeyDown={e => { if (rowsClickable && (e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) { e.preventDefault(); onRowClick(r.original) } }}
+                sx={{ cursor: rowsClickable ? 'pointer' : 'default', height: config.rowHeight ?? krds.size.row,
+                  '&:hover': { bgcolor: `${krds.color.actionPrimaryHover} !important` }, '&:active': { bgcolor: `${krds.color.actionPrimaryPressed} !important` },
+                  '&.Mui-selected': { bgcolor: `${krds.color.actionPrimarySelected} !important`, boxShadow: `inset 3px 0 0 ${krds.color.borderPrimary}` },
+                  '&:focus-visible': { outline: 'none', boxShadow: `inset 0 0 0 2px ${krds.color.borderPrimary}` } }}>
+                {r.getAllCells().map((cell, i) => (
+                  <TableCell key={cell.id} component={i === 0 ? 'th' : 'td'} scope={i === 0 ? 'row' : undefined} sx={{ py: '4px', fontWeight: 400, whiteSpace: ['date', 'time', 'timeRange', 'number', 'status', 'boolean'].includes(visibleColumns.find(x => x.field === cell.column.id)?.type ?? '') ? 'nowrap' : undefined }}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                 ))}
               </TableRow>
             ))}
             {rows.length === 0 && !q.isLoading && (
-              <TableRow><TableCell colSpan={visibleColumns.length + (rowActions ? 1 : 0)} align="center" sx={{ py: 6, color: 'text.secondary' }}>{L.noData}</TableCell></TableRow>
+              <TableRow><TableCell colSpan={visibleColumns.length + (rowActions ? 1 : 0)} align="center" sx={{ py: 6, color: `${krds.color.textSubtle} !important`, fontSize: `${krds.fs.bodyM} !important` }}>{L.noData}</TableCell></TableRow>
             )}
           </TableBody>
           {hasFooter && (
             <TableFooter>
               <TableRow>
                 {visibleColumns.map(c => (
-                  <TableCell key={c.field} align={c.footerAlign ?? 'left'} sx={{ fontWeight: 600 }}>
+                  <TableCell key={c.field} align={c.footerAlign ?? 'left'} sx={{ fontWeight: 700, bgcolor: krds.color.surfaceGraySubtler, color: `${krds.color.textBasic} !important` }}>
                     {typeof c.footerText === 'function' ? c.footerText(rows) : c.footerText ?? ''}
                   </TableCell>
                 ))}
-                {rowActions && <TableCell />}
+                {rowActions && <TableCell sx={{ bgcolor: krds.color.surfaceGraySubtler }} />}
               </TableRow>
             </TableFooter>
           )}
         </Table>
       </TableContainer>}
-      <MjPagination page={q.page} pageCount={q.pageCount} total={q.total} pageSize={q.pageSize} onPageChange={q.setPage} mobile={mobile.active} />
+      <MjPagination page={q.page} pageCount={q.pageCount} total={q.total} pageSize={q.pageSize} onPageChange={q.setPage} mobile={mobile.active}
+        pageSizeOptions={config.pageSizeOptions} onPageSizeChange={q.setPageSize} />
 
       {config.excelImport && <ExcelImportDialog config={config} file={importFile} onClose={() => setImportFile(null)} mobile={mobile} />}
       <MjSheet open={dialog !== null} onClose={closeDialog} size={config.dialogSize ?? 'sm'} mobile={mobile}

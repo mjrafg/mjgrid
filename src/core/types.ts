@@ -195,6 +195,23 @@ export interface MjAddressParams extends MjEditableParams {
   provider?: 'daum'
 }
 
+/** HACCP status semantics (docs/design-system/haccp/status-semantics.md) */
+export type MjStatusSemantic = 'success' | 'warning' | 'danger' | 'information' | 'gray'
+export interface MjStatusOption {
+  /** status code kept constant in logic */
+  value: string | number | boolean
+  /** label from i18n */
+  text: string
+  semantic: MjStatusSemantic
+  /** override the default glyph for the semantic */
+  icon?: string
+}
+/** rendered as a shared status badge (icon + text + color, never color alone) */
+export interface MjStatusParams extends MjEditableParams {
+  options: MjStatusOption[]
+  placeholder?: string
+}
+
 export interface MjCustomParams {
   /** rendered inside the form; a node, or a function of the current form values */
   node: unknown | ((ctx: { value: unknown; onChange: (v: unknown) => void; getValues: () => Record<string, unknown>; setValue: (f: string, v: unknown) => void }) => unknown)
@@ -269,6 +286,7 @@ export type MjColumn =
   | Col<'autocomplete', MjAutocompleteParams>
   | Col<'profile', MjProfileParams>
   | Col<'custom', MjCustomParams>
+  | Col<'status', MjStatusParams>
 
 export type MjColumnType = MjColumn['type']
 
@@ -354,6 +372,10 @@ export interface MjGridConfig {
   editMode?: MjEditMode
   softDelete?: boolean
   pageSize?: number
+  /** page-size selector choices (KRDS list pattern: 10 / 20 / 50); [] hides the selector */
+  pageSizeOptions?: number[]
+  /** form input height: medium 48 (default) or large 56 for operator/touch forms */
+  inputSize?: 'medium' | 'large'
   defaultSort?: MjSort
   defaultFilters?: MjFilter[]
   /** applied to the free-text search, with columnValue replaced by the search term */

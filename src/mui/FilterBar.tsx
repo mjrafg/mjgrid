@@ -1,9 +1,10 @@
-import { Badge, Box, Button, IconButton, MenuItem, TextField } from '@mui/material'
+import { Badge, Box, Chip, IconButton, MenuItem } from '@mui/material'
 import { useState } from 'react'
 import dayjs from 'dayjs'
 import { filterFor, useMj, useMjOptions, type MjColumn, type MjDateRange, type MjFilter, type MjGridConfig } from '../core'
 import { MjSheet, type MjMobileState } from './mobile'
 import { MjDatePicker } from './DatePicker'
+import { krds, KrdsTextField, MjButton } from './krds'
 
 export interface MjFilterBarProps {
   config: MjGridConfig
@@ -12,14 +13,15 @@ export interface MjFilterBarProps {
   mobile?: MjMobileState
 }
 
-function SelectFilter({ column, value, onChange, fullWidth }: { column: Extract<MjColumn, { type: 'select' }>; value: string; onChange: (v: string) => void; fullWidth?: boolean }) {
-  const { options } = useMjOptions(column.params)
+function SelectFilter({ column, value, onChange, fullWidth }: { column: Extract<MjColumn, { type: 'select' | 'status' }>; value: string; onChange: (v: string) => void; fullWidth?: boolean }) {
+  const { options: fetched } = useMjOptions(column.type === 'select' ? column.params : undefined)
   const { labels } = useMj()
+  const options = column.type === 'status' ? (column.params?.options ?? []).map(o => ({ value: o.value, text: o.text })) : fetched
   return (
-    <TextField select size="small" label={column.headerName} value={value} sx={{ minWidth: 160 }} fullWidth={fullWidth} onChange={e => onChange(e.target.value)}>
-      {!column.params?.hideAllOption && <MenuItem value=""><em>{labels.all}</em></MenuItem>}
+    <KrdsTextField select size="small" label={column.headerName} value={value} sx={{ minWidth: 160 }} fullWidth={fullWidth} displayEmpty onChange={e => onChange(String(e.target.value))}>
+      {!(column.type === 'select' && column.params?.hideAllOption) && <MenuItem value=""><em>{labels.all}</em></MenuItem>}
       {options.map(o => <MenuItem key={String(o.value)} value={String(o.value)}>{o.text}</MenuItem>)}
-    </TextField>
+    </KrdsTextField>
   )
 }
 
@@ -36,6 +38,8 @@ export function MjFilterBar({ config, onSearch, mobile }: MjFilterBarProps) {
     .sort((a, b) => (a.filterBarIndex ?? 1) - (b.filterBarIndex ?? 1))
   const [values, setValues] = useState<Record<string, unknown>>({})
   const [open, setOpen] = useState(false)
+  // values applied to the query (drive the active-filter chips); `values` is the draft being edited
+  const [applied, setApplied] = useState<Record<string, unknown>>({})
   const isMobile = Boolean(mobile?.active)
   if (columns.length === 0) return null
 
@@ -56,6 +60,7 @@ export function MjFilterBar({ config, onSearch, mobile }: MjFilterBarProps) {
       const f = filterFor(c, fv)
       if (f) filters.push(f)
     }
+    setApplied(next)
     onSearch(filters)
   }
   const set = (c: MjColumn, v: unknown, immediate: boolean) => {
@@ -66,22 +71,31 @@ export function MjFilterBar({ config, onSearch, mobile }: MjFilterBarProps) {
     if (immediate && !isMobile) apply(next)
   }
   const activeCount = columns.filter(c => { const v = values[c.field]; return v !== undefined && v !== null && v !== '' && !(typeof v === 'object' && !(v as { startDate?: string }).startDate && !(v as { endDate?: string }).endDate) }).length
-  const clearAll = () => { setValues({}); onSearch([]) }
+  const clearAll = () => { setValues({}); setApplied({}); onSearch([]) }
+  const removeOne = (field: string) => { const next = { ...values }; delete next[field]; setValues(next); apply(next) }
+  const describe = (c: MjColumn, v: unknown): string => {
+    if (c.type === 'boolean') return v === 'true' ? c.params?.positiveText ?? labels.positive : c.params?.negativeText ?? labels.negative
+    if (c.type === 'date') { const r = v as { startDate?: string; endDate?: string }; return `${r.startDate ?? ''} ~ ${r.endDate ?? ''}` }
+    if (c.type === 'status') return c.params?.options.find(o => String(o.value) === String(v))?.text ?? String(v)
+    return String(v)
+  }
+  const activeChips = columns.filter(c => { const v = applied[c.field]; return v !== undefined && v !== null && v !== '' && !(typeof v === 'object' && !(v as { startDate?: string }).startDate) })
 
   const controls = (
-    <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center', px: isMobile ? 0 : 2, pt: isMobile ? 0 : 2, flexDirection: isMobile ? 'column' : 'row', '& > *': isMobile ? { width: '100%' } : undefined }} data-testid="mj-filter-controls">
+    <Box sx={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-end', px: isMobile ? 0 : '16px', pt: isMobile ? 0 : '16px', flexDirection: isMobile ? 'column' : 'row', fontFamily: krds.font.family, '& > *': isMobile ? { width: '100%' } : undefined }} data-testid="mj-filter-controls">
       {columns.map(c => {
         const v = values[c.field]
         switch (c.type) {
           case 'select':
+          case 'status':
             return <SelectFilter key={c.field} column={c} value={String(v ?? '')} onChange={x => set(c, x, true)} fullWidth={isMobile} />
           case 'boolean':
             return (
-              <TextField key={c.field} select size="small" label={c.headerName} value={String(v ?? '')} sx={{ minWidth: 140 }} onChange={e => set(c, e.target.value, true)}>
+              <KrdsTextField key={c.field} select size="small" label={c.headerName} value={String(v ?? '')} sx={{ minWidth: 140 }} fullWidth={isMobile} displayEmpty onChange={e => set(c, String(e.target.value), true)}>
                 <MenuItem value=""><em>{labels.all}</em></MenuItem>
                 <MenuItem value="true">{c.params?.positiveText ?? labels.positive}</MenuItem>
                 <MenuItem value="false">{c.params?.negativeText ?? labels.negative}</MenuItem>
-              </TextField>
+              </KrdsTextField>
             )
           case 'date': {
             const r = (v as { startDate?: string; endDate?: string } | undefined) ?? {}
@@ -96,16 +110,16 @@ export function MjFilterBar({ config, onSearch, mobile }: MjFilterBarProps) {
             const fmt = (d: Date) => dayjs(d).format('YYYY-MM-DD')
             const active = (p: MjDateRange) => r.startDate === fmt(p.startDate()) && r.endDate === fmt(p.endDate())
             return (
-              <Box key={c.field} sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row', '& > *': isMobile ? { width: '100%' } : undefined }}>
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                  <MjDatePicker label={c.headerName} selector={c.params?.selector ?? 'date'} value={r.startDate ?? null} onChange={v => upd('startDate', v ?? '')} sx={isMobile ? { flex: 1 } : { width: 170 }} />
-                  <span>~</span>
-                  <MjDatePicker aria-label={`${c.headerName} end`} selector={c.params?.selector ?? 'date'} value={r.endDate ?? null} onChange={v => upd('endDate', v ?? '')} sx={isMobile ? { flex: 1 } : { width: 170 }} />
+              <Box key={c.field} sx={{ display: 'flex', gap: '8px', alignItems: 'flex-end', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row', '& > *': isMobile ? { width: '100%' } : undefined }}>
+                <Box sx={{ display: 'flex', gap: '8px', alignItems: 'flex-end' }}>
+                  <MjDatePicker size="small" label={c.headerName} selector={c.params?.selector ?? 'date'} value={r.startDate ?? null} onChange={v => upd('startDate', v ?? '')} sx={isMobile ? { flex: 1 } : { width: 170 }} />
+                  <Box component="span" aria-hidden="true" sx={{ pb: '10px' }}>~</Box>
+                  <MjDatePicker size="small" aria-label={`${c.headerName} end`} selector={c.params?.selector ?? 'date'} value={r.endDate ?? null} onChange={v => upd('endDate', v ?? '')} sx={isMobile ? { flex: 1 } : { width: 170 }} />
                 </Box>
-                {/* presets match the 40px height of the small inputs beside them */}
-                <Box sx={{ display: 'flex', gap: 1, '& > .MuiButton-root': isMobile ? { flex: 1 } : { height: 40 } }}>
+                {/* presets are small (40px) like the inputs beside them; mobile: 44px touch targets */}
+                <Box sx={{ display: 'flex', gap: '8px', '& > .MuiButton-root': isMobile ? { flex: 1 } : undefined }}>
                   {presets.map(p => (
-                    <Button key={p.name} variant={active(p) ? 'contained' : 'outlined'} onClick={() => setRange(active(p) ? {} : { startDate: fmt(p.startDate()), endDate: fmt(p.endDate()) })}>{p.name}</Button>
+                    <MjButton key={p.name} size={isMobile ? 'medium' : 'small'} variant={active(p) ? 'primary' : 'tertiary'} aria-pressed={active(p)} onClick={() => setRange(active(p) ? {} : { startDate: fmt(p.startDate()), endDate: fmt(p.endDate()) })}>{p.name}</MjButton>
                   ))}
                 </Box>
               </Box>
@@ -113,26 +127,39 @@ export function MjFilterBar({ config, onSearch, mobile }: MjFilterBarProps) {
           }
           default:
             return (
-              <TextField key={c.field} size="small" type={c.type === 'number' ? 'number' : 'text'} label={c.headerName} value={String(v ?? '')}
+              <KrdsTextField key={c.field} size="small" type={c.type === 'number' ? 'number' : 'text'} inputMode={c.type === 'number' ? 'decimal' : undefined} label={c.headerName} value={String(v ?? '')} sx={isMobile ? undefined : { width: 200 }}
                 onChange={e => set(c, e.target.value, false)} onKeyDown={e => { if (e.key === 'Enter') { apply(values); setOpen(false) } }} />
             )
         }
       })}
-      {!isMobile && <IconButton color="primary" aria-label={labels.search} onClick={() => apply(values)} sx={{ width: 40, height: 40 }}>🔍</IconButton>}
+      {!isMobile && <IconButton color="primary" aria-label={labels.search} onClick={() => apply(values)} sx={{ width: 40, height: 40, color: krds.color.iconPrimary, border: `${krds.borderW} solid ${krds.color.buttonTertiaryBorder}`, borderRadius: krds.radius.md, '&:focus-visible': { boxShadow: krds.focusRing } }}>🔍</IconButton>}
     </Box>
   )
 
-  if (!isMobile) return controls
+  // active filters as removable chips (components/search-filters.md)
+  const chips = activeChips.length > 0 && (
+    <Box role="group" aria-label={labels.activeFilters} sx={{ display: 'flex', gap: '8px', flexWrap: 'wrap', px: isMobile ? '12px' : '16px', pt: '8px' }} data-testid="mj-filter-chips">
+      {activeChips.map(c => {
+        const text = `${c.headerName}: ${describe(c, applied[c.field])}`
+        return <Chip key={c.field} label={text} onDelete={() => removeOne(c.field)} deleteIcon={<Box component="span" aria-hidden="true" sx={{ px: '4px', fontSize: 14 }}>✕</Box>}
+          sx={{ height: 32, borderRadius: krds.radius.max, bgcolor: krds.color.surfaceGraySubtler, border: `${krds.borderW} solid ${krds.color.borderGray}`, fontFamily: krds.font.family, fontSize: krds.fs.bodyXs, color: krds.color.textBasic,
+            '& .MuiChip-deleteIcon': { color: krds.color.iconGray, minWidth: 24, minHeight: 24, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: krds.radius.max, '&:hover': { color: krds.color.textDanger } }, '&:focus-visible, & .MuiChip-deleteIcon:focus-visible': { boxShadow: krds.focusRing } }}
+          aria-label={text} data-remove-label={labels.removeFilter(c.headerName)} />
+      })}
+    </Box>
+  )
+
+  if (!isMobile) return <>{controls}{chips}</>
   return (
     <>
       <Badge badgeContent={activeCount} color="primary" overlap="rectangular" sx={{ flexShrink: 0 }}>
-        <Button variant="outlined" aria-label={labels.filters} onClick={() => setOpen(true)} sx={{ minHeight: 44, whiteSpace: 'nowrap' }}>{labels.filters}</Button>
+        <MjButton variant="tertiary" size="medium" aria-label={labels.filters} onClick={() => setOpen(true)} sx={{ whiteSpace: 'nowrap' }}>{labels.filters}</MjButton>
       </Badge>
       <MjSheet open={open} onClose={() => setOpen(false)} title={labels.filters} mobile={mobile!} data-testid="mj-filter-sheet"
         actions={
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Button variant="outlined" color="error" sx={{ flex: 1 }} onClick={() => { clearAll(); setOpen(false) }}>{labels.clear}</Button>
-            <Button variant="contained" sx={{ flex: 2 }} onClick={() => { apply(values); setOpen(false) }}>{labels.apply}</Button>
+          <Box sx={{ display: 'flex', gap: '8px' }}>
+            <MjButton variant="tertiary" size="large" sx={{ flex: 1 }} onClick={() => { clearAll(); setOpen(false) }}>{labels.clear}</MjButton>
+            <MjButton variant="primary" size="large" sx={{ flex: 2 }} onClick={() => { apply(values); setOpen(false) }}>{labels.apply}</MjButton>
           </Box>
         }>
         {controls}

@@ -4,7 +4,7 @@ import type { MjColumn, MjColumnType } from '../../src/core'
 
 describe('columnTypeRegistry', () => {
   it('covers every column type exactly once', () => {
-    const types: MjColumnType[] = ['string','number','select','date','time','timeRange','weekDays','boolean','image','file','address','button','selectGrid','autocomplete','profile','custom']
+    const types: MjColumnType[] = ['string','number','select','date','time','timeRange','weekDays','boolean','image','file','address','button','selectGrid','autocomplete','profile','custom','status']
     for (const t of types) expect(columnTypeRegistry[t], t).toBeDefined()
     expect(Object.keys(columnTypeRegistry).sort()).toEqual([...types].sort())
   })

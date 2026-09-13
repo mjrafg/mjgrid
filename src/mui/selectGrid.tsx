@@ -1,10 +1,10 @@
-import { Box, IconButton, InputAdornment, TextField } from '@mui/material'
+import { Box, IconButton, InputAdornment } from '@mui/material'
 import { useState } from 'react'
 import { useMj, type ColumnOf, type MjRow } from '../core'
 import { getGridComponent, type EditorProps, type FieldProps, type TypeRenderers } from './registry'
 import { displayValue } from './value'
 import { MjSheet, useMjMobile } from './mobile'
-import { tfSlots } from './compat'
+import { krds, KrdsTextField } from './krds'
 
 interface PickerProps {
   column: ColumnOf<'selectGrid'>
@@ -15,6 +15,8 @@ interface PickerProps {
   disabled?: boolean
   label?: string
   required?: boolean
+  id?: string
+  size?: 'small' | 'medium' | 'large'
 }
 
 /**
@@ -25,7 +27,7 @@ interface PickerProps {
  * Read-only field, explicit search/clear affordances, and the nested grid is
  * only mounted (and only fetches) once the dialog opens.
  */
-export function SelectGridPicker({ column, value, row, onPick, error, disabled, label, required }: PickerProps) {
+export function SelectGridPicker({ column, value, row, onPick, error, disabled, label, required, id, size = 'small' }: PickerProps) {
   const [open, setOpen] = useState(false)
   const { labels } = useMj()
   const p = column.params
@@ -38,19 +40,15 @@ export function SelectGridPicker({ column, value, row, onPick, error, disabled, 
 
   return (
     <>
-      <TextField size="small" fullWidth value={text} label={label} required={required} error={Boolean(error)} helperText={error}
-        disabled={disabled} onClick={() => !disabled && setOpen(true)}
-        {...tfSlots({
-          html: { readOnly: true, 'aria-haspopup': 'dialog', style: { cursor: disabled ? 'default' : 'pointer' } },
-          input: {
-            endAdornment: (
-              <InputAdornment position="end">
-                {text && !disabled && <IconButton size="small" aria-label={labels.clearValue} onClick={e => { e.stopPropagation(); onPick(null) }}>✕</IconButton>}
-                <IconButton size="small" aria-label={labels.pick} disabled={disabled} onClick={e => { e.stopPropagation(); setOpen(true) }}>🔍</IconButton>
-              </InputAdornment>
-            )
-          }
-        })} />
+      <KrdsTextField id={id} size={size} fullWidth value={text} label={label} required={required} error={Boolean(error)} helperText={error}
+        disabled={disabled} onClick={() => !disabled && setOpen(true)} readOnly aria-label={label ? undefined : column.headerName}
+        inputProps={{ 'aria-haspopup': 'dialog', style: { cursor: disabled ? 'default' : 'pointer' } }}
+        endAdornment={
+          <InputAdornment position="end">
+            {text && !disabled && <IconButton size="small" aria-label={labels.clearValue} onClick={e => { e.stopPropagation(); onPick(null) }} sx={{ color: krds.color.iconGray }}>✕</IconButton>}
+            <IconButton size="small" aria-label={labels.pick} disabled={disabled} onClick={e => { e.stopPropagation(); setOpen(true) }} sx={{ color: krds.color.iconGray }}>🔍</IconButton>
+          </InputAdornment>
+        } />
       <MjSheet open={open} onClose={() => setOpen(false)} title={title} size={p.grid.dialogSize ?? 'md'} mobile={mobile} data-testid="mj-select-grid">
         <Box sx={{ minHeight: mobile.active ? undefined : 400, height: mobile.active ? '70dvh' : undefined }}>{open && <Grid config={nested} />}</Box>
       </MjSheet>
@@ -63,8 +61,8 @@ function SelectGridEditor({ column, value, row, onChange, error, disabled }: Edi
     onPick={picked => { onChange(picked, picked ? column.params?.patch?.(picked) : undefined); column.params?.onChange?.(picked, row) }} />
 }
 
-function SelectGridField({ column, value, onChange, error, disabled, getValues, setValue }: FieldProps<'selectGrid'>) {
-  return <SelectGridPicker column={column} value={value} row={getValues() as MjRow} error={error} disabled={disabled}
+function SelectGridField({ column, value, onChange, error, disabled, getValues, setValue, id, size }: FieldProps<'selectGrid'>) {
+  return <SelectGridPicker column={column} value={value} row={getValues() as MjRow} error={error} disabled={disabled} id={id} size={size}
     label={column.headerName} required={column.rules?.some(r => r.required)}
     onPick={picked => {
       onChange(picked)

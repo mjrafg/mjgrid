@@ -1,7 +1,8 @@
-import { Avatar, Box, Button, FormControl, FormLabel, Tab, Tabs, Typography } from '@mui/material'
+import { Avatar, Box, FormControl, FormLabel, Tab, Tabs, Typography } from '@mui/material'
 import { useEffect, useRef, useState, type DragEvent } from 'react'
 import { formatBytes, isPendingFile, newRowId, useMj, type MjColumn, type MjColumnType, type MjFile } from '../core'
 import type { CellProps, FieldProps, TypeRenderers } from './registry'
+import { krds, MjButton } from './krds'
 
 const IMAGE_EXT = ['.png', '.jpg', '.jpeg', '.gif', '.webp']
 const isImageName = (n: string) => IMAGE_EXT.includes(n.slice(n.lastIndexOf('.')).toLowerCase())
@@ -57,8 +58,8 @@ export function MjDropzone({ value, onChange, accept, maxSize, storageType, prev
     <Box>
       <Box role="button" tabIndex={disabled ? -1 : 0} aria-label={inputLabel ?? labels.uploadHint} onClick={() => !disabled && inputRef.current?.click()}
         onDragOver={e => e.preventDefault()} onDrop={onDrop}
-        sx={{ border: '2px dashed', borderColor: error ? 'error.main' : 'divider', borderRadius: 1, p: 2, textAlign: 'center', cursor: disabled ? 'default' : 'pointer',
-          minHeight: showImage ? undefined : 96, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1, opacity: disabled ? 0.6 : 1 }}>
+        sx={{ border: `${krds.borderWMd} dashed`, borderColor: error ? krds.color.borderDanger : krds.color.borderGray, borderRadius: krds.radius.md, p: '16px', textAlign: 'center', cursor: disabled ? 'default' : 'pointer', bgcolor: krds.color.surfaceGraySubtler,
+          minHeight: showImage ? undefined : 96, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px', opacity: disabled ? 0.6 : 1, fontFamily: krds.font.family, '&:focus-visible': { outline: 'none', boxShadow: krds.focusRing } }}>
         <input ref={inputRef} type="file" hidden accept={anyType ? undefined : exts.join(',')} disabled={disabled} data-testid="mj-file-input"
           onChange={e => { pick(e.target.files?.[0]); e.target.value = '' }} />
         {showImage && src
@@ -72,8 +73,8 @@ export function MjDropzone({ value, onChange, accept, maxSize, storageType, prev
       </Box>
       {value && (
         <Box sx={{ display: 'flex', gap: 1, mt: 1, justifyContent: 'center' }}>
-          {value.savedName && <Button size="small" variant="outlined" component="a" href={files.downloadUrl(value)} download={value.originalName} onClick={e => e.stopPropagation()}>{labels.download}</Button>}
-          {!disabled && <Button size="small" variant="outlined" color="error" onClick={() => onChange(null)}>{labels.remove}</Button>}
+          {value.savedName && <MjButton variant="tertiary" size="small" component="a" href={files.downloadUrl(value)} download={value.originalName} onClick={e => e.stopPropagation()}>{labels.download}</MjButton>}
+          {!disabled && <MjButton variant="danger" size="small" onClick={() => onChange(null)}>{labels.remove}</MjButton>}
         </Box>
       )}
     </Box>
@@ -109,8 +110,8 @@ export function SignaturePad({ onChange, storageType, initial, disabled }: Signa
       <canvas ref={ref} width={300} height={300} data-testid="mj-signature" style={{ border: '2px dashed #ccc', borderRadius: 4, touchAction: 'none', width: '100%', maxWidth: 300, aspectRatio: '1 / 1' }}
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerLeave={up} />
       <Box sx={{ display: 'flex', gap: 1 }}>
-        <Button size="small" variant="outlined" color="error" onClick={clear} disabled={disabled}>{labels.signClear}</Button>
-        <Button size="small" variant="contained" onClick={commit} disabled={disabled}>{labels.register}</Button>
+        <MjButton variant="tertiary" size="small" onClick={clear} disabled={disabled}>{labels.signClear}</MjButton>
+        <MjButton variant="secondary" size="small" onClick={commit} disabled={disabled}>{labels.register}</MjButton>
       </Box>
       {initial?.file && initial.isDraw && <Typography variant="caption" color="success.main" role="status">{labels.signStaged}</Typography>}
     </Box>
@@ -119,7 +120,12 @@ export function SignaturePad({ onChange, storageType, initial, disabled }: Signa
 
 const req = (c: MjColumn) => c.rules?.some(r => r.required)
 const Label = ({ column, error }: { column: MjColumn; error?: string }) => (
-  <FormLabel sx={{ fontSize: 13, mb: 0.5 }} error={Boolean(error)}>{column.headerName}{req(column) ? ' *' : ''}{error ? ` — ${error}` : ''}</FormLabel>
+  <>
+    <FormLabel sx={{ display: 'block', mb: '4px', fontFamily: krds.font.family, fontSize: krds.fs.bodyS, fontWeight: 700, color: `${krds.color.textBasic} !important` }} error={Boolean(error)}>
+      {column.headerName}{req(column) ? <Box component="span" aria-hidden="true" sx={{ color: krds.color.textDanger, ml: '2px' }}>*</Box> : null}
+    </FormLabel>
+    {error && <Typography component="span" role="alert" sx={{ display: 'block', mb: '4px', fontSize: krds.fs.bodyS, color: krds.color.textDanger }}><Box component="span" aria-hidden="true" sx={{ mr: '4px' }}>✕</Box>{error}</Typography>}
+  </>
 )
 
 export function FileField({ column, value, onChange, error, disabled }: FieldProps<'file'>) {

@@ -1,10 +1,11 @@
-import { Box, Button, Typography } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { assertOk, loadOptionsByField, mjQueryKey, mjUrls, MjApiError, MjValidationError, newRowId, parseExcelRows, readFileAsArrayBuffer, useMj, validateRows, type MjGridConfig, type MjRow } from '../core'
 import { getGridComponent } from './registry'
 import type { MjGridHandle } from './Grid'
 import { MjSheet, type MjMobileState } from './mobile'
+import { krds, MjButton } from './krds'
 
 export interface ExcelImportDialogProps {
   config: MjGridConfig
@@ -74,12 +75,12 @@ export function ExcelImportDialog({ config, file, onClose, mobile }: ExcelImport
     <MjSheet open={file !== null} onClose={() => onClose(false)} size="lg" mobile={mobile} data-testid="mj-excel-import"
       title={<>{L.excelPreviewTitle(config.name)}{rows ? ` — ${L.excelRowsFound(rows.length)}` : ''}</>}
       actions={
-        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', '& .MuiButton-root': mobile.active ? { flex: 1 } : undefined }}>
-          <Button onClick={() => onClose(false)} color="error" variant="contained">{L.cancel}</Button>
-          <Button onClick={submit} variant="contained" disabled={!rows || busy}>{L.register}</Button>
+        <Box sx={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', '& .MuiButton-root': mobile.active ? { flex: 1 } : undefined }}>
+          <MjButton variant="tertiary" size={mobile.active ? 'large' : 'medium'} onClick={() => onClose(false)}>{L.cancel}</MjButton>
+          <MjButton variant="primary" size={mobile.active ? 'large' : 'medium'} onClick={submit} disabled={!rows || busy}>{L.register}</MjButton>
         </Box>
       }>
-      {error && <Typography color="error" role="alert">{error}</Typography>}
+      {error && <Typography role="alert" sx={{ p: '12px 16px', borderRadius: krds.radius.md, bgcolor: krds.color.surfaceDangerSubtler, border: `${krds.borderW} solid ${krds.color.borderDanger}`, color: krds.color.textDanger }}><Box component="span" aria-hidden="true" sx={{ mr: '4px' }}>✕</Box>{error}</Typography>}
       {rows && <Box sx={{ height: mobile.active ? '70dvh' : '60vh', minHeight: 300 }}><Grid ref={gridRef} config={previewConfig} /></Box>}
     </MjSheet>
   )

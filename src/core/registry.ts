@@ -57,7 +57,8 @@ export const columnTypeRegistry: Record<MjColumnType, MjTypeCapabilities> = {
   selectGrid: { filterOperator: null, searchable: false, width: 150, align: 'left', formCapable: true, inlineCapable: true },
   autocomplete: { filterOperator: null, searchable: false, width: 150, align: 'left', formCapable: true, inlineCapable: false },
   profile: { filterOperator: 'contains', searchable: true, width: 200, align: 'left', formCapable: true, inlineCapable: false },
-  custom: { filterOperator: null, searchable: false, width: 150, align: 'left', formCapable: true, inlineCapable: false }
+  custom: { filterOperator: null, searchable: false, width: 150, align: 'left', formCapable: true, inlineCapable: false },
+  status: { filterOperator: 'equals', searchable: false, width: 120, align: 'center', formCapable: true, inlineCapable: true }
 }
 
 export const capabilitiesOf = (c: MjColumn) => columnTypeRegistry[c.type]
@@ -77,6 +78,8 @@ export function filterFor(column: MjColumn, value: unknown, logic: 'and' | 'or' 
       if (Number.isNaN(n)) return null
       return { ...base, operator: '=', columnValue: n }
     }
+    case 'status':
+      return { ...base, operator: 'equals', columnValue: typeof value === 'string' && (value === 'true' || value === 'false') ? value === 'true' : value }
     case 'select': {
       const opts = column.params && 'options' in column.params ? column.params.options : undefined
       if (opts && typeof value === 'string') {

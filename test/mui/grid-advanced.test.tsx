@@ -105,7 +105,7 @@ describe('filter bar date presets', () => {
     await waitFor(() => expect(f.calls).toHaveLength(2))
     const today = dayjs().format('YYYY-MM-DD')
     expect((f.calls[1]!.body as { filters: unknown[] }).filters).toEqual([{ columnName: 'when', columnValue: `${today},${today}`, operator: 'between', logic: 'and' }])
-    expect(screen.getByText('오늘').closest('button')).toHaveClass('MuiButton-contained')
+    expect(screen.getByText('오늘').closest('button')).toHaveAttribute('aria-pressed', 'true')
     fireEvent.click(screen.getByText('오늘'))
     // clearing returns to the initial query key, which TanStack Query serves from cache - no third request is expected
     await waitFor(() => expect(screen.getByText('오늘').closest('button')).not.toHaveClass('MuiButton-contained'))

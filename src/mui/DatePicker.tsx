@@ -1,11 +1,12 @@
-import { Box, Button, IconButton, InputAdornment, Popover, TextField, Typography } from '@mui/material'
+import { Box, IconButton, InputAdornment, Popover, Typography } from '@mui/material'
 import dayjs from 'dayjs'
 // explicit .js: dayjs has no exports map, and Node's native ESM loader (Next SSR) rejects extensionless deep imports
 import customParseFormat from 'dayjs/plugin/customParseFormat.js'
 import { useEffect, useMemo, useState, type MouseEvent } from 'react'
+import { Button } from '@mui/material'
 import { useMj, type MjLabels } from '../core'
 import { MjSheet, useMjMobile } from './mobile'
-import { tfSlots } from './compat'
+import { krds, KrdsTextField, MjButton, type KrdsInputSize } from './krds'
 
 dayjs.extend(customParseFormat)
 
@@ -50,12 +51,13 @@ export function MjCalendar({ value, selector, onPick, touch }: MjCalendarProps) 
   const decadeStart = Math.floor(view.year() / 10) * 10
 
   const cellSx = (active: boolean, muted = false, isToday = false) => ({
-    minWidth: cell, width: cell, height: cell, p: 0, borderRadius: 1, fontSize: 14, fontWeight: active ? 700 : 400,
-    color: active ? 'primary.contrastText' : muted ? 'text.disabled' : 'text.primary',
-    bgcolor: active ? 'primary.main' : undefined, outline: isToday && !active ? '1px solid' : undefined, outlineColor: 'primary.main',
-    '&:hover': { bgcolor: active ? 'primary.dark' : 'action.hover' }
+    minWidth: cell, width: cell, height: cell, p: 0, borderRadius: krds.radius.sm, fontFamily: krds.font.family, fontSize: krds.fs.bodyS, fontWeight: active ? 700 : 400,
+    color: active ? krds.color.textInverse : muted ? krds.color.textDisabled : krds.color.textBasic,
+    bgcolor: active ? krds.color.actionPrimaryActive : undefined, outline: isToday && !active ? `${krds.borderW} solid ${krds.color.borderPrimary}` : undefined, outlineOffset: -1,
+    '&:hover': { bgcolor: active ? krds.color.buttonPrimaryFillHover : krds.color.actionPrimaryHover },
+    '&:focus-visible': { boxShadow: krds.focusRing }
   })
-  const selectSx = { border: 'none', background: 'transparent', fontSize: 15, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', color: 'inherit' }
+  const selectSx = { border: 'none', background: 'transparent', fontSize: 15, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', color: 'inherit', minHeight: 32 }
 
   const header = (
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
@@ -116,12 +118,12 @@ export function MjCalendar({ value, selector, onPick, touch }: MjCalendarProps) 
   }
 
   return (
-    <Box sx={{ p: 1.5, minWidth: cell * 7 + 24 }} data-testid="mj-calendar">
+    <Box sx={{ p: 1.5, minWidth: cell * 7 + 24, fontFamily: krds.font.family, color: krds.color.textBasic }} data-testid="mj-calendar">
       {header}
       {grid}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-        <Button size="small" onClick={() => onPick(null)}>{L.clearValue}</Button>
-        <Button size="small" onClick={() => onPick(toIso(today, selector))}>{L.today}</Button>
+        <MjButton variant="text" size="small" onClick={() => onPick(null)}>{L.clearValue}</MjButton>
+        <MjButton variant="text" size="small" onClick={() => onPick(toIso(today, selector))}>{L.today}</MjButton>
       </Box>
     </Box>
   )
@@ -141,13 +143,14 @@ export interface MjDatePickerProps {
   error?: boolean
   helperText?: string
   fullWidth?: boolean
-  size?: 'small' | 'medium'
+  size?: KrdsInputSize
+  id?: string
   placeholder?: string
   'aria-label'?: string
   sx?: Record<string, unknown>
 }
 
-export function MjDatePicker({ value, onChange, selector = 'date', label, required, disabled, error, helperText, fullWidth, size = 'small', placeholder, 'aria-label': ariaLabel, sx }: MjDatePickerProps) {
+export function MjDatePicker({ value, onChange, selector = 'date', label, required, disabled, error, helperText, fullWidth, size = 'medium', id, placeholder, 'aria-label': ariaLabel, sx }: MjDatePickerProps) {
   const { labels: L } = useMj()
   const mobile = useMjMobile()
   const fmt = displayFormat(L, selector)
@@ -176,22 +179,17 @@ export function MjDatePicker({ value, onChange, selector = 'date', label, requir
   const calendar = <MjCalendar value={iso} selector={selector} onPick={pick} touch={mobile.active} />
   return (
     <>
-      <TextField size={size} fullWidth={fullWidth} label={label} required={required} disabled={disabled} error={error} helperText={helperText}
-        value={text} placeholder={placeholder ?? fmt} sx={sx} onClick={e => e.stopPropagation()}
+      <KrdsTextField id={id} size={size} fullWidth={fullWidth} label={label} required={required} disabled={disabled} error={error} helperText={helperText}
+        value={text} placeholder={placeholder ?? fmt} sx={sx} onClick={e => e.stopPropagation()} aria-label={ariaLabel} inputMode="numeric"
         onChange={e => setText(e.target.value)} onBlur={commitText} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitText() } }}
-        {...tfSlots({
-          html: { 'aria-label': ariaLabel, inputMode: 'numeric' }, label: { shrink: true },
-          input: {
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton size="small" edge="end" aria-label={L.openCalendar} aria-haspopup="dialog" disabled={disabled} onClick={openCalendar}>📅</IconButton>
-              </InputAdornment>
-            )
-          }
-        })} />
+        endAdornment={
+          <InputAdornment position="end">
+            <IconButton size="small" edge="end" aria-label={L.openCalendar} aria-haspopup="dialog" disabled={disabled} onClick={openCalendar} sx={{ color: krds.color.iconGray, '&:focus-visible': { boxShadow: krds.focusRing } }}>📅</IconButton>
+          </InputAdornment>
+        } />
       {mobile.active
         ? <MjSheet open={open} onClose={close} title={label ?? ariaLabel} mobile={mobile} data-testid="mj-date-sheet"><Box sx={{ display: 'flex', justifyContent: 'center' }}>{calendar}</Box></MjSheet>
-        : <Popover open={open} anchorEl={anchor} onClose={close} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }} onClick={e => e.stopPropagation()}>{calendar}</Popover>}
+        : <Popover open={open} anchorEl={anchor} onClose={close} anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }} onClick={e => e.stopPropagation()} className="mj-krds" sx={{ '& .MuiPopover-paper': { boxShadow: krds.shadow[2], borderRadius: krds.radius.lg, border: `${krds.borderW} solid ${krds.color.borderGrayLight}` } }}>{calendar}</Popover>}
     </>
   )
 }

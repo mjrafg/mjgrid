@@ -116,6 +116,8 @@ Override any URL with `config.urls.{fetch,insert,insertBulk,update,updateBulk,de
 | `keepOneRow` | boolean | inline: always keep an editable row |
 | `printColor` | string \| (row) => string | |
 | `mobile` | `MjMobileOptions` | see [Mobile](#mobile) |
+| `pageSizeOptions` | number[] | page-size choices, default `[10, 20, 50]`; `[]` hides the selector |
+| `inputSize` | `'medium' \| 'large'` | form input height 48 / 56 (large for operator / touch forms) |
 | `hooks` | `MjGridHooks` | see below |
 
 ### hooks
@@ -151,6 +153,7 @@ Override any URL with `config.urls.{fetch,insert,insertBulk,update,updateBulk,de
 | `selectGrid` | picked row object | ✓ | ✓ | `grid: MjGridConfig` (picker), `patch(picked) → sibling fields`, `displayValue`, `dialogTitle`, `onChange` |
 | `autocomplete` | option data | ✓ | | `options`/`fetchUrl`, `textFormatter`, `onChange` |
 | `custom` | any | ✓ | | `node` or `node(ctx)` |
+| `status` | status code | ✓ | ✓ | `options: [{ value, text, semantic, icon? }]` — shared badge, filter select |
 
 Read-only cells exist for every type. Files are **staged** when chosen and uploaded when the form is submitted, so cancelling a form never leaves orphan files.
 
@@ -183,6 +186,17 @@ What changes on a phone:
 - **Bottom sheets** for the create/edit/view form (full-width fields, sticky action bar), delete confirm, Excel preview, the `selectGrid` picker and the filter bar (a badge button; filters apply from the sheet's 적용 button, never while typing).
 - **Back closes the open sheet**: nested sheets close innermost-first, closing from the UI leaves no phantom history entry, and the host's own `history.state` is preserved (the entry is tagged `__mjOverlay`). Use `useHistoryDismiss(open, onClose, enabled)` and `MjSheet` for your own overlays.
 - **Toolbar**: full-width search with `enterKeyHint="search"`, primary actions at 44px, secondary ones (Excel, print) behind ⋮; compact pager with safe-area padding; 16px inputs so iOS does not zoom; signature canvas scales to the screen.
+
+## Design system (KRDS)
+
+The grid implements the HACCAP UI/UX design system (`docs/design-system`, KRDS Standard style): tokens, table, inputs, buttons, badges, pagination, overlays, cards, focus ring, high-contrast mode and the 5 user font-size levels.
+
+- **Tokens.** Every visual value is `var(--krds-…, <official fallback>)`, so the grid is correct without any host CSS and follows the host when it defines the KRDS variables. Hosts without a `tokens.css` render `<KrdsTokens />` once next to `MjProvider`; `createKrdsTheme()` gives MUI the same palette / font / radius.
+- **Text/screen settings.** `html.font-size-1..5` scales the type tokens (`--krds-scale`, 56 / 62.5 / 68 / 75 / 81 % equivalents) and `html.high-contrast` thickens borders and adds badge borders — set those classes from the header control. (Deliberate adaptation: scaling is done with a multiplier instead of the root font-size so MUI hosts with a 16px root keep working.)
+- **Components.** `MjButton` (`variant`: primary / secondary / tertiary / text / danger, `size`: xsmall … large), `KrdsTextField` (label above, sizes 40 / 48 / 56, KRDS states and aria wiring), `MjBadge` (`semantic`: success / warning / danger / information / gray, always icon + text).
+- **Status column.** `{ type: 'status', params: { options: [{ value: 'deviation', text: '이탈', semantic: 'danger' }] } }` renders the shared badge in the table, cards and Excel export; the filter bar offers it as a select; the form as a select. Codes stay constant, labels come from your i18n.
+- **Hierarchy.** One Primary action per context: the create button (or 저장 in inline mode); Excel / print are tertiary; delete is Danger and goes through the confirmation sheet. Forms show an error summary (`role="alert"`) and move focus to the first invalid field.
+- **List page.** Search + filters + active-filter chips + table (caption, `scope`, `aria-sort`, sticky header, skeleton loading) + pagination with 10 / 20 / 50 per page (`pageSizeOptions`). Below 768px rows become cards (`dl`), forms become bottom sheets with a sticky full-width action bar.
 
 ## Dates
 
