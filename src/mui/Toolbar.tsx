@@ -68,10 +68,13 @@ export function MjToolbar(p: MjToolbarProps) {
       <Box sx={{ display: config.hideToolbar ? 'none' : 'flex', flexDirection: 'column', gap: 1, p: 1.5, ...touchSx }} data-testid="mj-toolbar-mobile">
         {p.title && <Box>{p.title}</Box>}
         {search && <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>{search}{p.filterButton}</Box>}
-        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', '& > .MuiButton-root': { flex: '1 1 auto', whiteSpace: 'nowrap' } }}>
-          {!search && p.filterButton}
-          {p.actions}
-          {addButton}{saveButton}{deleteButton}
+        {/* the ⋮ button is outside the wrapping row so it never drops onto a line of its own */}
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+          <Box sx={{ flex: 1, minWidth: 0, display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', '& > .MuiButton-root': { flex: '1 1 auto', whiteSpace: 'nowrap' } }}>
+            {!search && p.filterButton}
+            {p.actions}
+            {addButton}{saveButton}{deleteButton}
+          </Box>
           {menu.length > 0 && (
             <>
               <IconButton aria-label={L.menu} aria-haspopup="menu" onClick={e => setMenuAnchor(e.currentTarget)} sx={{ flex: '0 0 auto' }}>⋮</IconButton>

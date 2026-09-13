@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+
+- Mobile toolbar: the ⋮ menu button sits outside the wrapping button row, so it never takes a line of its own.
+
 ## 1.1.1
 
 - Mobile form: the 취소/삭제/등록 buttons render in the sheet's fixed footer (portal + `form` attribute) instead of a sticky row inside the scroll area, which overlapped the last field on real phones.
