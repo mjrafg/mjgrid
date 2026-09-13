@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+- Fix: `dayjs/plugin/customParseFormat` imported with its `.js` extension — 1.2.0 failed to load under Node's native ESM loader (Next.js SSR).
+
 ## 1.2.0
 
 - **Label-driven date picker** (`MjDatePicker`, `MjCalendar`) replaces the native `<input type="date">` in the form, the inline editor and the filter bar. The calendar's month names, weekday abbreviations, header (`2026년 9월`), display formats and buttons come from `labels` (Korean default, `enLabels` in English), so every browser and OS shows the same thing. Typed input in the display format, `selector: 'date' | 'month' | 'year'`, 오늘 / 지우기, popover on desktop, bottom sheet (with back-button dismiss) on mobile.

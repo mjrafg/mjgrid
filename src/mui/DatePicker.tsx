@@ -1,6 +1,7 @@
 import { Box, Button, IconButton, InputAdornment, Popover, TextField, Typography } from '@mui/material'
 import dayjs from 'dayjs'
-import customParseFormat from 'dayjs/plugin/customParseFormat'
+// explicit .js: dayjs has no exports map, and Node's native ESM loader (Next SSR) rejects extensionless deep imports
+import customParseFormat from 'dayjs/plugin/customParseFormat.js'
 import { useEffect, useMemo, useState, type MouseEvent } from 'react'
 import { useMj, type MjLabels } from '../core'
 import { MjSheet, useMjMobile } from './mobile'
