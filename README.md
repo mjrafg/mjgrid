@@ -138,7 +138,7 @@ Override any URL with `config.urls.{fetch,insert,insertBulk,update,updateBulk,de
 | `string` | string | ✓ | ✓ | `inputType: 'password'`, `multiline`, `rows`, `placeholder`, `mask` ('000-0000'), `valueCheckUrl`, `valueCheck(fn)`, `valueCheckText`, `mainPasswordField`, `format`, `disabled`, `editable` |
 | `number` | number | ✓ | ✓ | `mask`, `unitField` |
 | `select` | value or `{[valueField]: …}` | ✓ | ✓ | `options` **or** `fetchUrl` + `valueField` + `textField`; `placeholder`, `hideAllOption`, `onChange` |
-| `date` | `YYYY-MM-DD` | ✓ | ✓ | `format`, `selector: 'date'\|'month'\|'year'`, `ranges` (filter presets) |
+| `date` | `YYYY-MM-DD` | ✓ | ✓ | `format`, `selector: 'date'\|'month'\|'year'`, `ranges` (filter presets). Calendar is label-driven — see [Dates](#dates) |
 | `time` | `HH:mm:ss` | ✓ | ✓ | `step` (minutes) |
 | `timeRange` | `"HH:mm HH:mm"` | ✓ | | |
 | `weekDays` | `"1,0,1,0,1,0,0"` Sunday-first | ✓ | | `dayLabels` |
@@ -183,6 +183,19 @@ What changes on a phone:
 - **Bottom sheets** for the create/edit/view form (full-width fields, sticky action bar), delete confirm, Excel preview, the `selectGrid` picker and the filter bar (a badge button; filters apply from the sheet's 적용 button, never while typing).
 - **Back closes the open sheet**: nested sheets close innermost-first, closing from the UI leaves no phantom history entry, and the host's own `history.state` is preserved (the entry is tagged `__mjOverlay`). Use `useHistoryDismiss(open, onClose, enabled)` and `MjSheet` for your own overlays.
 - **Toolbar**: full-width search with `enterKeyHint="search"`, primary actions at 44px, secondary ones (Excel, print) behind ⋮; compact pager with safe-area padding; 16px inputs so iOS does not zoom; signature canvas scales to the screen.
+
+## Dates
+
+Date columns use the package's own calendar (`MjDatePicker`) instead of the browser's native picker, so month names, weekdays and formats are identical on every device and come from `labels`:
+
+```ts
+// koLabels (default)
+monthNames: ['1월', … '12월'], weekdayNames: ['일', '월', '화', '수', '목', '금', '토'],
+calendarTitle: (y, m) => `${y}년 ${m}월`, dateFormat: 'YYYY-MM-DD', monthFormat: 'YYYY-MM', yearFormat: 'YYYY',
+openCalendar: '달력 열기', today: '오늘', clearValue: '지우기'
+```
+
+Pass `labels={enLabels}` (or your own partial override) to `MjProvider` to switch the whole calendar. The text box accepts typed input in the display format; `selector` picks a day / month / year grid; storage is always `YYYY-MM-DD` (first day for month/year). On desktop the calendar is a popover, on mobile a bottom sheet that the back button closes. `MjDatePicker` and `MjCalendar` are exported for use outside the grid.
 
 ## Imperative API
 

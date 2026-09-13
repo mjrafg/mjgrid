@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { applyMask, fillUrlTemplate, interpolate, useMj, useMjOptions } from '../core'
 import type { FieldProps, TypeRenderers } from './registry'
 import type { MjColumnType } from '../core'
+import { MjDatePicker } from './DatePicker'
 
 const label = (c: FieldProps['column']) => c.headerName
 
@@ -74,15 +75,11 @@ export function SelectField({ column, value, onChange, error, disabled }: FieldP
   )
 }
 
-/** Storage is always YYYY-MM-DD; a native date input needs no extra picker dependency. */
+/** Storage is always YYYY-MM-DD; the calendar is label-driven so months read the same everywhere. */
 export function DateField({ column, value, onChange, error, disabled }: FieldProps<'date'>) {
-  const sel = column.params?.selector ?? 'date'
-  const type = sel === 'month' ? 'month' : 'date'
-  const v = typeof value === 'string' ? (sel === 'month' ? value.slice(0, 7) : value.slice(0, 10)) : ''
   return (
-    <TextField fullWidth size="small" type={type} label={label(column)} value={v} disabled={disabled}
-      InputLabelProps={{ shrink: true }} required={column.rules?.some(r => r.required)} error={Boolean(error)} helperText={error}
-      onChange={e => onChange(e.target.value ? (sel === 'month' ? `${e.target.value}-01` : e.target.value) : null)} />
+    <MjDatePicker fullWidth label={label(column)} selector={column.params?.selector ?? 'date'} value={typeof value === 'string' ? value.slice(0, 10) : null}
+      disabled={disabled} required={column.rules?.some(r => r.required)} error={Boolean(error)} helperText={error} onChange={onChange} />
   )
 }
 

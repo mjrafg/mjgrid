@@ -2,6 +2,7 @@ import { Checkbox, MenuItem, Select, TextField } from '@mui/material'
 import { useMjOptions } from '../core'
 import type { EditorProps, TypeRenderers } from './registry'
 import type { MjColumnType } from '../core'
+import { MjDatePicker } from './DatePicker'
 
 /**
  * Inline cell editors. Controlled by the row reducer: `value` in, onChange out
@@ -34,9 +35,9 @@ export function SelectEditor({ column, value, onChange, error, disabled }: Edito
   )
 }
 
-export function DateEditor({ value, onChange, error, disabled }: EditorProps<'date'>) {
-  return <TextField size="small" fullWidth type="date" value={typeof value === 'string' ? value.slice(0, 10) : ''} error={Boolean(error)}
-    disabled={disabled} onChange={e => onChange(e.target.value || null)} onClick={e => e.stopPropagation()} />
+export function DateEditor({ column, value, onChange, error, disabled }: EditorProps<'date'>) {
+  return <MjDatePicker fullWidth selector={column.params?.selector ?? 'date'} value={typeof value === 'string' ? value.slice(0, 10) : null} error={Boolean(error)}
+    disabled={disabled} aria-label={column.headerName} onChange={onChange} />
 }
 
 export function BooleanEditor({ value, onChange, disabled }: EditorProps<'boolean'>) {

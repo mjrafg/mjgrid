@@ -1,5 +1,5 @@
 import { Box, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, IconButton, MenuItem, SwipeableDrawer, TextField, Typography, useMediaQuery } from '@mui/material'
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { capabilitiesOf, useMj, type MjColumn, type MjGridConfig, type MjMobileOptions, type MjRow, type MjSort } from '../core'
 
 // ---------------------------------------------------------------------------
@@ -15,13 +15,18 @@ export interface MjMobileState extends Required<Pick<MjMobileOptions, 'layout' |
   history: boolean
 }
 
-/** Provider defaults merged under the config's `mobile`, resolved against the viewport. */
-export function useMjMobile(config: MjGridConfig): MjMobileState {
+/** The grid publishes its resolved state so widgets inside it (date picker, picker sheets) follow the grid, not the viewport alone. */
+export const MjMobileContext = createContext<MjMobileState | null>(null)
+
+/** Provider defaults merged under the config's `mobile`, resolved against the viewport. Without a config, inherits the enclosing grid's state. */
+export function useMjMobile(config?: Pick<MjGridConfig, 'mobile'>): MjMobileState {
   const { mobile: providerDefaults } = useMj()
-  const o: MjMobileOptions = { ...providerDefaults, ...config.mobile }
+  const inherited = useContext(MjMobileContext)
+  const o: MjMobileOptions = { ...providerDefaults, ...config?.mobile }
   const breakpoint = o.breakpoint ?? DEFAULT_MOBILE_BREAKPOINT
   const narrow = useMediaQuery(`(max-width:${breakpoint - 0.05}px)`, { noSsr: true })
   const active = o.enabled === true ? true : o.enabled === false ? false : narrow
+  if (!config && inherited) return inherited
   return {
     active,
     layout: o.layout ?? 'cards',

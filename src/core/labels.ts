@@ -18,6 +18,10 @@ export interface MjLabels {
   excelPreviewTitle: (name: string) => string; excelRowsFound: (n: number) => string
   errorPrefix: (rowNo: number) => string
   today: string; week: string; month: string
+  /** calendar: 12 month names, 7 weekday abbreviations (Sunday first), header title, display formats */
+  monthNames: string[]; weekdayNames: string[]; calendarTitle: (year: number, month: number) => string
+  dateFormat: string; monthFormat: string; yearFormat: string
+  openCalendar: string; prevMonth: string; nextMonth: string; prevYear: string; nextYear: string
   signStaged: string; filters: string; apply: string; sort: string; ascending: string; descending: string; more: string; less: string; close: string; menu: string; selectedRow: string
 }
 
@@ -41,6 +45,9 @@ export const koLabels: MjLabels = {
   excelPreviewTitle: n => `${n} 엑셀업로드`, excelRowsFound: n => `${n}건`,
   errorPrefix: n => `NO${n}: `,
   today: '오늘', week: '일주일', month: '한달',
+  monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'], weekdayNames: ['일', '월', '화', '수', '목', '금', '토'],
+  calendarTitle: (y, m) => `${y}년 ${m}월`, dateFormat: 'YYYY-MM-DD', monthFormat: 'YYYY-MM', yearFormat: 'YYYY',
+  openCalendar: '달력 열기', prevMonth: '이전 달', nextMonth: '다음 달', prevYear: '이전 해', nextYear: '다음 해',
   signStaged: '서명이 등록되었습니다. 저장 시 업로드됩니다.', filters: '필터', apply: '적용', sort: '정렬', ascending: '오름차순', descending: '내림차순', more: '더보기', less: '접기', close: '닫기', menu: '메뉴', selectedRow: '선택됨'
 }
 
@@ -64,5 +71,8 @@ export const enLabels: MjLabels = {
   excelPreviewTitle: n => `Import ${n} from Excel`, excelRowsFound: n => `${n} rows`,
   errorPrefix: n => `Row ${n}: `,
   today: 'Today', week: 'Week', month: 'Month',
+  monthNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], weekdayNames: ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'],
+  calendarTitle: (y, m) => `${['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'][m - 1]} ${y}`, dateFormat: 'YYYY-MM-DD', monthFormat: 'YYYY-MM', yearFormat: 'YYYY',
+  openCalendar: 'Open calendar', prevMonth: 'Previous month', nextMonth: 'Next month', prevYear: 'Previous year', nextYear: 'Next year',
   signStaged: 'Signature captured; it uploads when you save.', filters: 'Filters', apply: 'Apply', sort: 'Sort', ascending: 'Ascending', descending: 'Descending', more: 'More', less: 'Less', close: 'Close', menu: 'Menu', selectedRow: 'Selected'
 }

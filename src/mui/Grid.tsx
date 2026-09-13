@@ -12,7 +12,7 @@ import { renderersFor, setGridComponent } from './registry'
 import { MjToolbar } from './Toolbar'
 import { ExcelImportDialog } from './ExcelImport'
 import { readCell } from './value'
-import { MjCardFooter, MjCardList, MjSheet, MjSortControl, useMjMobile } from './mobile'
+import { MjCardFooter, MjCardList, MjMobileContext, MjSheet, MjSortControl, useMjMobile } from './mobile'
 
 export interface MjGridProps {
   config: MjGridConfig
@@ -197,6 +197,7 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
   const rowsClickable = mode !== 'readonly' || Boolean(config.hooks?.onRowClick)
 
   return (
+    <MjMobileContext.Provider value={mobile}>
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }} data-testid="mj-grid" data-mobile={mobile.active || undefined}>
       {!mobile.active && <MjFilterBar config={config} onSearch={q.setFilters} />}
       <MjToolbar config={config} search={q.search} onSearch={q.setSearch} onAdd={mode === 'readonly' && !config.hooks?.onAddClick ? undefined : onAdd} onSave={inline ? onSave : undefined} mobile={mobile.active}
@@ -267,6 +268,7 @@ export const MjGrid = forwardRef<MjGridHandle, MjGridProps>(function MjGrid({ co
         {dialog && <MjForm config={config} mode={dialog.mode} row={dialog.row} onClose={closeDialog} mobile={mobile} actionsContainer={mobile.active ? formActionsEl : undefined} />}
       </MjSheet>
     </Box>
+    </MjMobileContext.Provider>
   )
 })
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.0
+
+- **Label-driven date picker** (`MjDatePicker`, `MjCalendar`) replaces the native `<input type="date">` in the form, the inline editor and the filter bar. The calendar's month names, weekday abbreviations, header (`2026년 9월`), display formats and buttons come from `labels` (Korean default, `enLabels` in English), so every browser and OS shows the same thing. Typed input in the display format, `selector: 'date' | 'month' | 'year'`, 오늘 / 지우기, popover on desktop, bottom sheet (with back-button dismiss) on mobile.
+- Grid publishes its resolved mobile state through `MjMobileContext`; `useMjMobile()` without a config inherits it.
+
 ## 1.1.2
 
 - Mobile toolbar: the ⋮ menu button sits outside the wrapping button row, so it never takes a line of its own.

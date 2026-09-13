@@ -3,6 +3,7 @@ import { useState } from 'react'
 import dayjs from 'dayjs'
 import { filterFor, useMj, useMjOptions, type MjColumn, type MjDateRange, type MjFilter, type MjGridConfig } from '../core'
 import { MjSheet, type MjMobileState } from './mobile'
+import { MjDatePicker } from './DatePicker'
 
 export interface MjFilterBarProps {
   config: MjGridConfig
@@ -97,9 +98,9 @@ export function MjFilterBar({ config, onSearch, mobile }: MjFilterBarProps) {
             return (
               <Box key={c.field} sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap', flexDirection: isMobile ? 'column' : 'row', '& > *': isMobile ? { width: '100%' } : undefined }}>
                 <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                  <TextField size="small" type="date" label={c.headerName} InputLabelProps={{ shrink: true }} value={r.startDate ?? ''} onChange={e => upd('startDate', e.target.value)} sx={isMobile ? { flex: 1 } : undefined} />
+                  <MjDatePicker label={c.headerName} selector={c.params?.selector ?? 'date'} value={r.startDate ?? null} onChange={v => upd('startDate', v ?? '')} sx={isMobile ? { flex: 1 } : { width: 170 }} />
                   <span>~</span>
-                  <TextField size="small" type="date" InputLabelProps={{ shrink: true }} value={r.endDate ?? ''} onChange={e => upd('endDate', e.target.value)} sx={isMobile ? { flex: 1 } : undefined} inputProps={{ 'aria-label': `${c.headerName} end` }} />
+                  <MjDatePicker aria-label={`${c.headerName} end`} selector={c.params?.selector ?? 'date'} value={r.endDate ?? null} onChange={v => upd('endDate', v ?? '')} sx={isMobile ? { flex: 1 } : { width: 170 }} />
                 </Box>
                 <Box sx={{ display: 'flex', gap: 1, '& > .MuiButton-root': isMobile ? { flex: 1 } : undefined }}>
                   {presets.map(p => (
