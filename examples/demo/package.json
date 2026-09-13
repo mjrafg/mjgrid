@@ -9,7 +9,7 @@
     "preview": "vite preview --port 5180"
   },
   "dependencies": {
-    "@agent24/mjgrid": "file:../../agent24-mjgrid-1.1.0.tgz",
+    "@agent24/mjgrid": "file:../../agent24-mjgrid-1.1.1.tgz",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@mui/material": "^5.16.7",

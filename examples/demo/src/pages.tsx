@@ -69,19 +69,21 @@ export function StaticPage() {
     ]
   }
   return (
-    <Stack spacing={1}>
-      <Stack direction="row" spacing={1}>
-        <Button size="small" variant="outlined" onClick={() => ref.current?.openView(rows[0]!)}>ref.openView(row 1)</Button>
-        <Button size="small" variant="outlined" onClick={() => ref.current?.setSearch('정적 행 2')}>ref.setSearch</Button>
-        <Button size="small" variant="outlined" onClick={() => ref.current?.setSearch('')}>ref.clear</Button>
+    <Stack spacing={1} sx={{ height: '100%' }}>
+      <Stack spacing={1} sx={{ px: { xs: 1.5, md: 0 }, pt: { xs: 1.5, md: 0 } }}>
+        <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+          <Button size="small" variant="outlined" onClick={() => ref.current?.openView(rows[0]!)}>ref.openView(row 1)</Button>
+          <Button size="small" variant="outlined" onClick={() => ref.current?.setSearch('정적 행 2')}>ref.setSearch</Button>
+          <Button size="small" variant="outlined" onClick={() => ref.current?.setSearch('')}>ref.clear</Button>
+        </Stack>
+        <Typography variant="caption">client-side rows, no server; renderCell override; readonly + onRowClick</Typography>
       </Stack>
-      <Typography variant="caption">client-side rows, no server; renderCell override; readonly + onRowClick</Typography>
-      <Box sx={{ height: 520 }}><MjGrid ref={ref} config={cfg} /></Box>
+      <Box sx={{ flex: 1, minHeight: 0 }}><MjGrid ref={ref} config={cfg} /></Box>
     </Stack>
   )
 }
 
 export function ErrorDemo() {
   const [n, setN] = useState(0)
-  return <Typography variant="caption" onClick={() => setN(n + 1)}>Delete product <b>P-LOCKED</b> (row 4) to see a server error envelope surfaced instead of a success toast.</Typography>
+  return <Typography variant="caption" sx={{ px: { xs: 1.5, md: 0 }, pt: { xs: 1, md: 0 } }} onClick={() => setN(n + 1)}>Delete product <b>P-LOCKED</b> (row 4) to see a server error envelope surfaced instead of a success toast.</Typography>
 }
