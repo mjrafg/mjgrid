@@ -70,6 +70,6 @@ export interface NestedGridProps { config: import('../core').MjGridConfig; ref?:
 let gridComponent: ComponentType<NestedGridProps> | null = null
 export const setGridComponent = (c: ComponentType<NestedGridProps>) => { gridComponent = c }
 export const getGridComponent = (): ComponentType<NestedGridProps> => {
-  if (!gridComponent) throw new Error('MjGrid is not registered; import @bluebiz/mjgrid/mui before rendering a picker')
+  if (!gridComponent) throw new Error('MjGrid is not registered; import @agent24/mjgrid/mui before rendering a picker')
   return gridComponent
 }

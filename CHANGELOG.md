@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+
+- Package renamed `@bluebiz/mjgrid` → `@agent24/mjgrid` (all entry points: `.`, `./core`, `./mui`). No API changes.
+
 ## 1.0.0
 
 Ground-up replacement for the `MjGrid` folder of the HACCP frontends (legacy audit: 43 defects across three render engines).

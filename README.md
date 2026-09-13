@@ -1,21 +1,21 @@
-# @bluebiz/mjgrid
+# @agent24/mjgrid
 
 Declarative CRUD grid for React. **One column definition drives everything**: the data grid, the filter bar, the create/edit/view dialog, inline editing, Excel import/export and print.
 
 ```
-npm install @bluebiz/mjgrid     # npm projects
-yarn add @bluebiz/mjgrid        # yarn projects
+npm install @agent24/mjgrid     # npm projects
+yarn add @agent24/mjgrid        # yarn projects
 ```
 
-Use the package manager the host project already uses (mixing them makes the other tool reconcile `node_modules` and drop packages). Until it is published, install from a tarball: `npm pack` in this repo, then `yarn add file:./bluebiz-mjgrid-<version>.tgz` — and bump the version for every local tarball you install, because yarn v1 reinstalls a cached tarball of the same version.
+Use the package manager the host project already uses (mixing them makes the other tool reconcile `node_modules` and drop packages). Until it is published, install from a tarball: `npm pack` in this repo, then `yarn add file:./agent24-mjgrid-<version>.tgz` — and bump the version for every local tarball you install, because yarn v1 reinstalls a cached tarball of the same version.
 
 Peer dependencies: `react >=18`, `react-dom >=18`; the MUI adapter needs `@mui/material >=5.12`, `@emotion/react`, `@emotion/styled`.
 
 ## 30-second start
 
 ```tsx
-import { MjGrid, MjProvider } from '@bluebiz/mjgrid'
-import type { MjApiClient, MjGridConfig } from '@bluebiz/mjgrid'
+import { MjGrid, MjProvider } from '@agent24/mjgrid'
+import type { MjApiClient, MjGridConfig } from '@agent24/mjgrid'
 
 // 1. Transport is yours: implement MjApiClient over your axios/fetch, auth and base URL.
 const api: MjApiClient = { get, post, put, delete: del, downloadPost, upload }
@@ -168,7 +168,7 @@ ref.current.openInsert(defaults?) · openEdit(row) · openView(row)
 
 ## Headless core
 
-`@bluebiz/mjgrid/core` has no UI dependency: types, `buildServerSideRequest`, `validateField/validateRows`, `filterFor`, `parseExcelRows` / `buildTemplateWorkbook` / `exportRowsToXlsx`, `applyFilters/applySort`, and the hooks `useMjQuery`, `useMjRows`, `useMjSave`, `useMjOptions`, `useMjUpload`. Another UI adapter registers renderers with `registerType(type, { Cell, Editor, Field })`.
+`@agent24/mjgrid/core` has no UI dependency: types, `buildServerSideRequest`, `validateField/validateRows`, `filterFor`, `parseExcelRows` / `buildTemplateWorkbook` / `exportRowsToXlsx`, `applyFilters/applySort`, and the hooks `useMjQuery`, `useMjRows`, `useMjSave`, `useMjOptions`, `useMjUpload`. Another UI adapter registers renderers with `registerType(type, { Cell, Editor, Field })`.
 
 ## Design rules (enforced)
 
@@ -183,7 +183,7 @@ ref.current.openInsert(defaults?) · openEdit(row) · openView(row)
 
 ```
 src/
-├── core/                 headless — no UI dependency (published as @bluebiz/mjgrid/core)
+├── core/                 headless — no UI dependency (published as @agent24/mjgrid/core)
 │   ├── types.ts          MjColumn discriminated union (16 types), MjGridConfig, MjGridHooks, MjRule
 │   ├── protocol.ts       MjApiClient, MjEnvelope, buildServerSideRequest, assertOk / MjApiError
 │   ├── url.ts            mjUrls(config) → fetch/insert/update/delete URLs (MjUrlError on misuse)
@@ -193,7 +193,7 @@ src/
 │   ├── excel.ts          parseExcelRows, buildTemplateWorkbook, exportRowsToXlsx (SheetJS)
 │   ├── labels.ts         koLabels / enLabels          messages.ts  koMessages / enMessages
 │   └── react/            MjProvider · useMjQuery · useMjRows · useMjSave · useMjOptions · useMjUpload
-└── mui/                  MUI 5 adapter (published as @bluebiz/mjgrid/mui and re-exported from the root)
+└── mui/                  MUI 5 adapter (published as @agent24/mjgrid/mui and re-exported from the root)
     ├── Grid.tsx          <MjGrid> — TanStack Table + toolbar, filter bar, pagination, footer, dialogs
     ├── Form.tsx          create / edit / view dialog (react-hook-form), deferred file uploads
     ├── FilterBar.tsx  Toolbar.tsx  Pagination.tsx  ExcelImport.tsx  print.ts

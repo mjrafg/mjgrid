@@ -1,7 +1,7 @@
 import { Box, Button, Stack, Typography } from '@mui/material'
 import { useRef, useState } from 'react'
 import toast from 'react-hot-toast'
-import { MjGrid, type MjGridConfig, type MjGridHandle } from '@bluebiz/mjgrid'
+import { MjGrid, type MjGridConfig, type MjGridHandle } from '@agent24/mjgrid'
 
 const unitSelect = { fetchUrl: '/api/product/unit', valueField: 'id', textField: 'name' } as const
 

@@ -1,6 +1,6 @@
 // In-memory implementation of MjApiClient. This is the whole "backend" of the
 // demo, which is the point: the grid only ever talks to this interface.
-import { exportRowsToXlsx, type MjApiClient, type MjColumn, type MjEnvelope, type MjFile, type MjFilter, type MjServerSideRequest } from '@bluebiz/mjgrid'
+import { exportRowsToXlsx, type MjApiClient, type MjColumn, type MjEnvelope, type MjFile, type MjFilter, type MjServerSideRequest } from '@agent24/mjgrid'
 
 type Row = Record<string, unknown> & { id: string }
 const uid = () => Math.random().toString(36).slice(2, 10)

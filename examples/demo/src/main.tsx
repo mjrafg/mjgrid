@@ -2,7 +2,7 @@ import { CssBaseline, FormControlLabel, Switch, Tab, Tabs, Box, Typography } fro
 import { useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import toast, { Toaster } from 'react-hot-toast'
-import { MjGrid, MjProvider, buildTemplateWorkbook, enLabels } from '@bluebiz/mjgrid'
+import { MjGrid, MjProvider, buildTemplateWorkbook, enLabels } from '@agent24/mjgrid'
 import { apiLog, memoryApi, subscribeLog, type ApiLogEntry } from './memoryApi'
 import { ErrorDemo, StaticPage, inventoryConfig, productsConfig, shiftsConfig } from './pages'
 
