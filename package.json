@@ -1,6 +1,6 @@
 {
   "name": "@agent24/mjgrid",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Declarative CRUD grid: one column definition drives the grid, filter bar, create/edit form, inline editing and Excel export. Headless core + MUI adapter.",
   "license": "MIT",
   "author": "mjrafg",

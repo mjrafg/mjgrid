@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.1
+
+- Filter bar (desktop): date presets and the search button are 40px like the small inputs beside them; select filters back to their natural width (full width only in the mobile sheet).
+
 ## 1.4.0
 
 - **TanStack Table v9** (`useTable` + `tableFeatures({})`, own column sizing/sortability; paging, sorting and filtering stay server-side / in `core/localQuery`). No API change for consumers.

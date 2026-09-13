@@ -12,11 +12,11 @@ export interface MjFilterBarProps {
   mobile?: MjMobileState
 }
 
-function SelectFilter({ column, value, onChange }: { column: Extract<MjColumn, { type: 'select' }>; value: string; onChange: (v: string) => void }) {
+function SelectFilter({ column, value, onChange, fullWidth }: { column: Extract<MjColumn, { type: 'select' }>; value: string; onChange: (v: string) => void; fullWidth?: boolean }) {
   const { options } = useMjOptions(column.params)
   const { labels } = useMj()
   return (
-    <TextField select size="small" label={column.headerName} value={value} sx={{ minWidth: 160 }} fullWidth onChange={e => onChange(e.target.value)}>
+    <TextField select size="small" label={column.headerName} value={value} sx={{ minWidth: 160 }} fullWidth={fullWidth} onChange={e => onChange(e.target.value)}>
       {!column.params?.hideAllOption && <MenuItem value=""><em>{labels.all}</em></MenuItem>}
       {options.map(o => <MenuItem key={String(o.value)} value={String(o.value)}>{o.text}</MenuItem>)}
     </TextField>
@@ -74,7 +74,7 @@ export function MjFilterBar({ config, onSearch, mobile }: MjFilterBarProps) {
         const v = values[c.field]
         switch (c.type) {
           case 'select':
-            return <SelectFilter key={c.field} column={c} value={String(v ?? '')} onChange={x => set(c, x, true)} />
+            return <SelectFilter key={c.field} column={c} value={String(v ?? '')} onChange={x => set(c, x, true)} fullWidth={isMobile} />
           case 'boolean':
             return (
               <TextField key={c.field} select size="small" label={c.headerName} value={String(v ?? '')} sx={{ minWidth: 140 }} onChange={e => set(c, e.target.value, true)}>
@@ -102,9 +102,10 @@ export function MjFilterBar({ config, onSearch, mobile }: MjFilterBarProps) {
                   <span>~</span>
                   <MjDatePicker aria-label={`${c.headerName} end`} selector={c.params?.selector ?? 'date'} value={r.endDate ?? null} onChange={v => upd('endDate', v ?? '')} sx={isMobile ? { flex: 1 } : { width: 170 }} />
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1, '& > .MuiButton-root': isMobile ? { flex: 1 } : undefined }}>
+                {/* presets match the 40px height of the small inputs beside them */}
+                <Box sx={{ display: 'flex', gap: 1, '& > .MuiButton-root': isMobile ? { flex: 1 } : { height: 40 } }}>
                   {presets.map(p => (
-                    <Button key={p.name} size="small" variant={active(p) ? 'contained' : 'outlined'} onClick={() => setRange(active(p) ? {} : { startDate: fmt(p.startDate()), endDate: fmt(p.endDate()) })}>{p.name}</Button>
+                    <Button key={p.name} variant={active(p) ? 'contained' : 'outlined'} onClick={() => setRange(active(p) ? {} : { startDate: fmt(p.startDate()), endDate: fmt(p.endDate()) })}>{p.name}</Button>
                   ))}
                 </Box>
               </Box>
@@ -117,7 +118,7 @@ export function MjFilterBar({ config, onSearch, mobile }: MjFilterBarProps) {
             )
         }
       })}
-      {!isMobile && <IconButton color="primary" aria-label={labels.search} onClick={() => apply(values)}>🔍</IconButton>}
+      {!isMobile && <IconButton color="primary" aria-label={labels.search} onClick={() => apply(values)} sx={{ width: 40, height: 40 }}>🔍</IconButton>}
     </Box>
   )
 
