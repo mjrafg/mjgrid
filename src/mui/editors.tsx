@@ -1,10 +1,9 @@
-import { Checkbox, MenuItem } from '@mui/material'
+import { Box, Checkbox, MenuItem } from '@mui/material'
 import { useMjOptions } from '../core'
 import type { EditorProps, TypeRenderers } from './registry'
 import type { MjColumnType } from '../core'
 import { MjDatePicker } from './DatePicker'
-import { krds, KrdsTextField } from './krds'
-import { checkInput } from './compat'
+import { krds, KrdsTextField, srOnly } from './krds'
 
 /**
  * Inline cell editors (KRDS small inputs, 40px). Controlled by the row
@@ -53,9 +52,15 @@ export function DateEditor({ column, value, onChange, error, disabled }: EditorP
     disabled={disabled} aria-label={column.headerName} onChange={onChange} />
 }
 
+/** Named by a wrapping <label> (inputProps on MUI 5 vs slotProps.input on MUI 6+ are not interchangeable). */
 export function BooleanEditor({ column, value, onChange, disabled }: EditorProps<'boolean'>) {
-  return <Checkbox checked={Boolean(value)} disabled={disabled} onChange={e => onChange(e.target.checked)} onClick={e => e.stopPropagation()}
-    {...checkInput({ 'aria-label': column.headerName })} sx={{ width: krds.size.touch, height: krds.size.touch, color: krds.color.borderGrayDark, '&.Mui-checked': { color: krds.color.actionPrimaryActive }, '&.Mui-focusVisible': { boxShadow: krds.focusRing, borderRadius: krds.radius.sm } }} />
+  return (
+    <Box component="label" sx={{ display: 'inline-flex' }} onClick={e => e.stopPropagation()}>
+      <Checkbox checked={Boolean(value)} disabled={disabled} onChange={e => onChange(e.target.checked)}
+        sx={{ width: krds.size.touch, height: krds.size.touch, color: krds.color.borderGrayDark, '&.Mui-checked': { color: krds.color.actionPrimaryActive }, '&.Mui-focusVisible': { boxShadow: krds.focusRing, borderRadius: krds.radius.sm } }} />
+      <Box component="span" sx={srOnly}>{column.headerName}</Box>
+    </Box>
+  )
 }
 
 export const defaultEditors: Partial<Record<MjColumnType, Partial<TypeRenderers>>> = Object.fromEntries(

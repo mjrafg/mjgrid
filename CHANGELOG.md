@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.2
+
+- **Fix (MUI 5 hosts, production builds):** 1.3.0–1.5.1 detected the MUI major by reading `version` from `@mui/material`, which MUI 5 does not export; webpack's production build rejects that ("Attempted import error"). Version detection is gone: dialog/drawer papers are styled through their class selectors and the inline checkbox is named by a wrapping `<label>`, which work the same on MUI 5–9.
+- Removed the `compat` exports (`tfSlots`, `drawerPaper`, `dialogPaper`, `checkInput`, `muiMajor`, `muiSlotApi`).
+- New test: every `@mui/material` import must exist in the installed MUI (runs on MUI 5.12 in the matrix), and namespace imports are forbidden.
+
 ## 1.5.1
 
 - No global type augmentation: the Daum postcode API is typed locally. 1.5.0 declared `Window.daum` globally, which broke `next build` in hosts that declare their own (TS2687).

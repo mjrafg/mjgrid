@@ -1,6 +1,6 @@
 {
   "name": "@agent24/mjgrid",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Declarative CRUD grid: one column definition drives the grid, filter bar, create/edit form, inline editing and Excel export. Headless core + MUI adapter.",
   "license": "MIT",
   "author": "mjrafg",
@@ -96,6 +96,7 @@
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.0.1",
     "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^24.19.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "eslint": "^10.10.0",

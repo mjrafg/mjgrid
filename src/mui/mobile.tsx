@@ -1,7 +1,6 @@
 import { Box, Dialog, DialogContent, DialogTitle, IconButton, SwipeableDrawer, Typography, useMediaQuery } from '@mui/material'
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { capabilitiesOf, useMj, type MjColumn, type MjGridConfig, type MjMobileOptions, type MjRow, type MjSort } from '../core'
-import { dialogPaper, drawerPaper } from './compat'
 import { krds, KrdsTextField, MjButton } from './krds'
 
 // ---------------------------------------------------------------------------
@@ -133,8 +132,9 @@ export function MjSheet({ open, onClose, title, children, actions, mobile, size,
   if (!mobile.active) {
     return (
       <Dialog open={open} onClose={onClose} fullWidth maxWidth={size ?? 'sm'} data-testid={testId} className="mj-krds"
-        sx={{ '& .MuiBackdrop-root': { bgcolor: krds.color.backgroundDim }, '& :focus-visible': { outline: 'none', boxShadow: krds.focusRing } }}
-        {...dialogPaper({ sx: { borderRadius: krds.radius.xl, boxShadow: krds.shadow[3], fontFamily: krds.font.family } })}>
+        // paper styled through its class: PaperProps (MUI 5) and slotProps.paper (MUI 6+) are not interchangeable
+        sx={{ '& .MuiBackdrop-root': { bgcolor: krds.color.backgroundDim }, '& :focus-visible': { outline: 'none', boxShadow: krds.focusRing },
+          '& .MuiDialog-paper': { borderRadius: krds.radius.xl, boxShadow: krds.shadow[3], fontFamily: krds.font.family } }}>
         {title !== undefined && <DialogTitle align="center" sx={{ fontFamily: krds.font.family, fontSize: krds.fs.h4, fontWeight: 700, color: krds.color.textBasic }}>{title}</DialogTitle>}
         <DialogContent sx={{ fontFamily: krds.font.family }}>{children}</DialogContent>
         {actions && <Box sx={{ px: 3, pb: 2 }}>{actions}</Box>}
@@ -145,8 +145,8 @@ export function MjSheet({ open, onClose, title, children, actions, mobile, size,
   return (
     // keepMounted:false — the SwipeableDrawer default keeps a closed sheet in the DOM, which would keep form state alive across opens
     <SwipeableDrawer anchor="bottom" open={open} onClose={onClose} onOpen={() => {}} disableSwipeToOpen data-testid={testId} ModalProps={{ keepMounted: false }} className="mj-krds"
-      sx={{ '& .MuiBackdrop-root': { bgcolor: krds.color.backgroundDim }, '& :focus-visible': { outline: 'none', boxShadow: krds.focusRing } }}
-      {...drawerPaper({ sx: { borderTopLeftRadius: full ? 0 : krds.radius.xl, borderTopRightRadius: full ? 0 : krds.radius.xl, boxShadow: krds.shadow[3], height: full ? '100dvh' : 'auto', maxHeight: full ? '100dvh' : '92dvh', display: 'flex', flexDirection: 'column', fontFamily: krds.font.family, color: krds.color.textBasic, ...touchSx } })}>
+      sx={{ '& .MuiBackdrop-root': { bgcolor: krds.color.backgroundDim }, '& :focus-visible': { outline: 'none', boxShadow: krds.focusRing },
+        '& .MuiDrawer-paper': { borderTopLeftRadius: full ? 0 : krds.radius.xl, borderTopRightRadius: full ? 0 : krds.radius.xl, boxShadow: krds.shadow[3], height: full ? '100dvh' : 'auto', maxHeight: full ? '100dvh' : '92dvh', display: 'flex', flexDirection: 'column', fontFamily: krds.font.family, color: krds.color.textBasic, ...touchSx } }}>
       <Box sx={{ flexShrink: 0, display: 'flex', alignItems: 'center', px: 1, pt: 1, pb: 0.5, borderBottom: '1px solid', borderColor: 'divider' }}>
         {!full && <Box sx={{ position: 'absolute', top: 6, left: '50%', width: 36, height: 4, borderRadius: 2, bgcolor: 'divider', transform: 'translateX(-50%)' }} />}
         <IconButton aria-label={L.close} onClick={onClose} sx={{ mt: full ? 0 : 1 }}>✕</IconButton>

@@ -9,7 +9,7 @@ yarn add @agent24/mjgrid        # yarn projects
 
 Use the package manager the host project already uses (mixing them makes the other tool reconcile `node_modules` and drop packages). Until it is published, install from a tarball: `npm pack` in this repo, then `yarn add file:./agent24-mjgrid-<version>.tgz` — and bump the version for every local tarball you install, because yarn v1 reinstalls a cached tarball of the same version.
 
-Peer dependencies: `react >=18 <20`, `react-dom`; the MUI adapter needs `@mui/material >=5.12 <10` (5, 6, 7 and 9 — the props that changed between majors are spelled per installed version by `compat.ts`), `@emotion/react`, `@emotion/styled`.
+Peer dependencies: `react >=18 <20`, `react-dom`; the MUI adapter needs `@mui/material >=5.12 <10` (5, 6, 7 and 9 — the grid only uses APIs that are identical across these majors; a test enforces that every `@mui/material` import exists in MUI 5.12), `@emotion/react`, `@emotion/styled`.
 
 ## 30-second start
 
