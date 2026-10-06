@@ -60,13 +60,17 @@ export function WeekDaysField({ column, value, onChange, error, disabled, id }: 
   )
 }
 
-declare global { interface Window { daum?: { Postcode: new (o: { oncomplete: (d: { address?: string; roadAddress?: string; jibunAddress?: string }) => void }) => { open: () => void } } } }
+// Typed locally on purpose: a global `Window.daum` declaration in a library clashes with
+// hosts that declare their own (TS2687 "All declarations of 'daum' must have identical modifiers").
+interface DaumPostcodeApi { Postcode: new (o: { oncomplete: (d: { address?: string; roadAddress?: string; jibunAddress?: string }) => void }) => { open: () => void } }
+const daumApi = (): DaumPostcodeApi | undefined => (typeof window === 'undefined' ? undefined : (window as unknown as { daum?: DaumPostcodeApi }).daum)
 
 /** Daum postcode when the host page loaded it; plain text otherwise. */
 export function AddressField({ column, value, onChange, error, disabled, id, size }: FieldProps<'address'>) {
   const { labels } = useMj()
-  const hasDaum = typeof window !== 'undefined' && Boolean(window.daum?.Postcode)
-  const open = () => hasDaum && new window.daum!.Postcode({ oncomplete: d => onChange(d.roadAddress || d.address || d.jibunAddress || '') }).open()
+  const daum = daumApi()
+  const hasDaum = Boolean(daum?.Postcode)
+  const open = () => hasDaum && new daum!.Postcode({ oncomplete: d => onChange(d.roadAddress || d.address || d.jibunAddress || '') }).open()
   return (
     <Box sx={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
       <Box sx={{ flex: 1, minWidth: 0 }}>

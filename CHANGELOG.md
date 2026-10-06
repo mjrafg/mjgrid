@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.1
+
+- No global type augmentation: the Daum postcode API is typed locally. 1.5.0 declared `Window.daum` globally, which broke `next build` in hosts that declare their own (TS2687).
+
 ## 1.5.0
 
 **KRDS design system** (HACCAP `docs/design-system`, Korean government design system, Standard style) applied to every surface.
